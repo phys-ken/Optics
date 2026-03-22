@@ -138,7 +138,7 @@
   oc.onResize = () => initPositions();
   initPositions();
 
-  function mirrorX() { return oc.width * 0.68; }
+  function mirrorX() { return oc.width * 0.5; }
 
   function draw() {
     const w = oc.width, h = oc.height;
@@ -154,13 +154,18 @@
 
     // Mirror
     if (!hideMirror) {
-      oc.drawPlainMirror(mx, h);
+      // Draw mirror as filled rectangle (matching archived style)
+      const ctx = oc.ctx;
+      const mirrorH = h / 3;
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(mx, h / 2 - mirrorH / 2, w / 50, mirrorH);
       oc.drawLabel(mx + 18, 22, '鏡', 'rgba(71,85,105,0.9)', 11);
     }
 
     // Draw reflected rays
+    const mirrorH = h / 3;
     const numRays = showAllRays ? rayCount * 2 : 5;
-    const spread = h * 0.85;
+    const spread = mirrorH;
     for (let i = 0; i <= numRays; i++) {
       const t = numRays === 0 ? 0 : (i / numRays) - 0.5;
       const hitY = h / 2 + spread * t;
@@ -186,15 +191,15 @@
         const hitY = h / 2 + spread * 0.5 * t;
         oc.drawVirtualRay(mx, hitY, imgX, imgY, 'rgba(37,99,235,0.3)', 1.5);
       }
-      // Virtual image marker
+      // Virtual image source (yellow circle, matching archived)
       const ctx = oc.ctx;
       ctx.beginPath();
       ctx.arc(imgX, imgY, 9, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(37,99,235,0.6)';
+      ctx.fillStyle = '#e67e00';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
       ctx.lineWidth = 2;
-      ctx.setLineDash([4, 3]);
       ctx.stroke();
-      ctx.setLineDash([]);
       oc.drawLabel(imgX + 14, imgY, '虚像', 'rgba(37,99,235,0.8)', 11);
     }
 
@@ -227,7 +232,7 @@
 
   cvs.addEventListener('click', () => { showAllRays = !showAllRays; });
 
-  UI.bindRange('range-rays', 'val-rays', v => { rayCount = Math.round(v); });
+  UI.bindRange('range-rays', 'val-rays', v => { rayCount = Math.round(v); document.getElementById('val-rays').textContent = rayCount * 2; });
   UI.bindCheckbox('cb-construction', v => { showConstruction = v; });
   UI.bindCheckbox('cb-hidemirror', v => { hideMirror = v; });
   UI.bindCheckbox('cb-allrays', v => { showAllRays = v; });

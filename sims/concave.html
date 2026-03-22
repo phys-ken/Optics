@@ -139,8 +139,7 @@
   let srcX, srcY;
   let showAllRays = true;
   let showConstruction = false;
-  let focalRatio = 6;
-  let rayCount = 20;
+  let focalRatio = 6;  let rayCount = 20;
 
   function initPositions() {
     const w = oc.width, h = oc.height;
@@ -150,7 +149,7 @@
   oc.onResize = () => initPositions();
   initPositions();
 
-  function mirrorX() { return oc.width * 0.82; }
+  function mirrorX() { return oc.width * 5 / 6; }
   function focalLen() { return oc.width / focalRatio; }
 
   function draw() {
@@ -178,7 +177,7 @@
     oc.drawLabel(mx - R, h / 2 + 18, 'C', 'rgba(200,30,30,0.7)', 11); // center of curvature
 
     // Draw reflected rays
-    const mirrorH = h * 0.6;
+    const mirrorH = h / 3;
     const top = (h - mirrorH) / 2;
     const bot = (h + mirrorH) / 2;
     const numRays = showAllRays ? rayCount * 2 : 5;
@@ -232,6 +231,25 @@
     oc.drawPointSource(srcX, srcY, 9);
     oc.drawLabel(srcX, srcY - 20, '光源', 'rgba(200,110,0,0.85)', 11);
 
+    // Construction lines (matching archived: straight-line constructions)
+    // Educational note: concave mirror construction uses straight lines
+    if (showConstruction) {
+      const col = 'rgba(37,99,235,0.55)';
+      // Ray 1: Through center of curvature (reflects back on same path)
+      // a) Source → mirror center
+      oc.drawVirtualRay(srcX, srcY, mx, h / 2, col, 1.5);
+      // b) Mirror center reflects symmetrically about axis → extends to x=0
+      const endY_center = h / 2 + (h / 2 - srcY) * mx / (mx - srcX);
+      oc.drawVirtualRay(mx, h / 2, 0, endY_center, col, 1.5);
+
+      // Ray 2: Parallel to axis → reflects through focal point
+      // a) Horizontal from source to mirror
+      oc.drawVirtualRay(srcX, srcY, mx, srcY, col, 1.5);
+      // b) From (mx, srcY) through focal point (mx-f, h/2) → extends to x=0
+      const endY_focal = srcY + (h / 2 - srcY) * mx / f;
+      oc.drawVirtualRay(mx, srcY, 0, endY_focal, col, 1.5);
+    }
+
     // Info
     UI.updateInfo({
       a: a.toFixed(0),
@@ -262,7 +280,7 @@
   }, { passive: false });
   cvs.addEventListener('click', () => { showAllRays = !showAllRays; });
 
-  UI.bindRange('range-rays', 'val-rays', v => { rayCount = Math.round(v); });
+  UI.bindRange('range-rays', 'val-rays', v => { rayCount = Math.round(v); document.getElementById('val-rays').textContent = rayCount * 2; });
   UI.bindRange('range-focal', 'val-focal', v => { focalRatio = v; });
   UI.bindCheckbox('cb-construction', v => { showConstruction = v; });
   UI.bindCheckbox('cb-allrays', v => { showAllRays = v; });

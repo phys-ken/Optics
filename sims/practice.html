@@ -83,10 +83,11 @@
     .problem-canvas {
       display: block;
       border-radius: var(--radius);
-      background: #f5f5f5;
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
       margin-bottom: var(--space-3);
       width: 100%;
-      height: 140px;
+      height: 200px;
     }
 
     .answer-key { color: #16a34a; font-weight: 600; }
@@ -204,12 +205,10 @@
           <span class="control-label">問題タイプ</span>
         </div>
         <select id="sel-type" style="width:100%; margin-top:var(--space-2); padding:var(--space-2) var(--space-3); border-radius:var(--radius); border:1px solid var(--color-border); font-family:inherit; font-size:var(--font-size-sm); background:var(--color-surface);">
-          <option value="lens_ab">凸レンズ — 像の位置 (b を求める)</option>
-          <option value="lens_a">凸レンズ — 物体の位置 (a を求める)</option>
-          <option value="lens_f">凸レンズ — 焦点距離 (f を求める)</option>
-          <option value="mag">凸レンズ — 倍率と像の大きさ</option>
-          <option value="concave">凹面鏡 — 像の位置</option>
-          <option value="mirror">平面鏡 — 像の位置（定性）</option>
+          <option value="lens_construction">凸レンズ — 作図（実像）</option>
+          <option value="lens_virtual">凸レンズ — 作図（虚像）</option>
+          <option value="concave_construction">凹面鏡 — 作図（直線近似）</option>
+          <option value="mirror_construction">平面鏡 — 像の作図</option>
         </select>
       </div>
 
@@ -237,16 +236,6 @@
         </div>
         <input type="range" id="range-count" min="3" max="30" value="10" step="1">
       </div>
-
-      <label class="checkbox-label">
-        <input type="checkbox" id="cb-diagrams" checked>
-        作図（概略図）を含める
-      </label>
-
-      <label class="checkbox-label">
-        <input type="checkbox" id="cb-integers" checked>
-        整数値のみ
-      </label>
 
       <div style="display:flex; flex-direction:column; gap:var(--space-2);">
         <button class="btn btn--primary" onclick="generateProblems()" id="btnGenerate">
@@ -281,7 +270,8 @@
 <script src="../js/optics.js"></script>
 <script>
   /* ============================================================
-     Practice Problem Generator
+     Practice Problem Generator — Drawing/Construction Only
+     All problems are ray-diagram construction problems.
   ============================================================ */
 
   UI.bindRange('range-count', 'val-count', () => {});
@@ -297,244 +287,396 @@
   function toggleAnswer(id) {
     const el = document.getElementById('ans-' + id);
     if (el) el.classList.toggle('visible');
+    // Draw answer diagram when revealed
+    if (el && el.classList.contains('visible')) {
+      const c = document.getElementById('acanvas-' + id);
+      if (c && c.dataset.ready !== '1') {
+        c.dataset.ready = '1';
+        const prob = window._problems && window._problems[id];
+        if (prob && prob.drawAnswer) prob.drawAnswer(c);
+      }
+    }
   }
 
-  /* ---- Number helpers ---- */
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
   function randInt(lo, hi) { return Math.floor(Math.random() * (hi - lo + 1)) + lo; }
 
-  /* ---- Lens problem generators ---- */
-  function genLensAB(difficulty, useIntegers) {
-    const fValues = {
-      easy:   [10, 15, 20],
-      medium: [10, 12, 15, 20, 25],
-      hard:   [8, 10, 12, 15, 16, 20, 24, 25, 30],
-    };
-    const f = pick(fValues[difficulty] || fValues.medium);
-    let a;
-    if (difficulty === 'easy') {
-      a = pick([2 * f, 3 * f, 4 * f]);
-    } else if (difficulty === 'medium') {
-      const multipliers = [1.5, 2, 3, 4, 5];
-      const m = pick(multipliers);
-      a = m * f;
-    } else {
-      a = randInt(f + 2, 5 * f);
-      if (useIntegers && (f * a) % (a - f) !== 0) {
-        // retry to get integer b
-        for (let i = 0; i < 50; i++) {
-          a = randInt(f + 2, 5 * f);
-          if ((f * a) % (a - f) === 0) break;
-        }
-      }
-    }
+  /* ============================================================
+     Drawing helpers (shared between problem & answer canvases)
+  ============================================================ */
 
-    const b = Optics.lensEquation(a, f);
-    const m = Optics.magnification(a, b);
-    const info = Optics.imageType(m);
-
-    const bRounded = Math.round(b * 10) / 10;
-    const mRounded = Math.round(Math.abs(m) * 100) / 100;
-
-    return {
-      difficulty,
-      question: `焦点距離 ${f} cm の凸レンズから、物体を ${a} cm の位置に置いた。\n像はレンズから何 cm の位置にできるか。また、実像か虚像か答えよ。`,
-      params: { '焦点距離 f': `${f} cm`, '物体距離 a': `${a} cm` },
-      answer: `
-        <strong>像の位置：</strong><br>
-        レンズの式：1/f = 1/a + 1/b より<br>
-        1/b = 1/${f} − 1/${a} = ${(1/f).toFixed(4)} − ${(1/a).toFixed(4)}<br>
-        b = <span class="answer-key">${bRounded} cm</span><br><br>
-        <strong>像の種類：</strong> <span class="answer-key">${info.label}</span>（b > 0 のため実像）<br>
-        <strong>倍率：</strong> |m| = b/a = ${bRounded}/${a} ≈ <span class="answer-key">${mRounded}</span>
-      `,
-      draw: (canvas) => drawLensDiagram(canvas, f, a, b),
-    };
-  }
-
-  function genLensA(difficulty, useIntegers) {
-    const f = pick([10, 15, 20]);
-    let b;
-    if (difficulty === 'easy') b = pick([2*f, 3*f]);
-    else if (difficulty === 'medium') b = pick([1.5*f, 2*f, 3*f, 4*f]);
-    else b = randInt(f + 2, 4*f);
-
-    // a from lens equation: a = b*f / (b - f)
-    const a = (b * f) / (b - f);
-    const aRounded = Math.round(a * 10) / 10;
-
-    return {
-      difficulty,
-      question: `焦点距離 ${f} cm の凸レンズを使ったとき、レンズから ${b} cm の位置に実像ができた。\n物体はレンズから何 cm の位置にあるか。`,
-      params: { '焦点距離 f': `${f} cm`, '像の距離 b': `${b} cm` },
-      answer: `
-        レンズの式：1/f = 1/a + 1/b より<br>
-        1/a = 1/${f} − 1/${b}<br>
-        a = <span class="answer-key">${aRounded} cm</span>
-      `,
-      draw: (canvas) => drawLensDiagram(canvas, f, a, b),
-    };
-  }
-
-  function genLensF(difficulty) {
-    const f = pick([10, 12, 15, 20]);
-    const mult = pick([2, 3, 4]);
-    const a = mult * f;
-    const b = Optics.lensEquation(a, f);
-    const bRounded = Math.round(b * 10) / 10;
-
-    return {
-      difficulty,
-      question: `物体をレンズから ${a} cm 置いたとき、レンズから ${bRounded} cm の位置に像ができた。\nこのレンズの焦点距離を求めよ。`,
-      params: { '物体距離 a': `${a} cm`, '像の距離 b': `${bRounded} cm` },
-      answer: `
-        1/f = 1/a + 1/b = 1/${a} + 1/${bRounded}<br>
-        f = <span class="answer-key">${f} cm</span>
-      `,
-      draw: (canvas) => drawLensDiagram(canvas, f, a, b),
-    };
-  }
-
-  function genMag(difficulty) {
-    const f = pick([10, 15, 20]);
-    const a = pick([2*f, 3*f, 4*f]);
-    const b = Optics.lensEquation(a, f);
-    const m = Optics.magnification(a, b);
-    const objH = pick([2, 3, 4, 5]);
-    const imgH = Math.abs(m) * objH;
-    const imgHRounded = Math.round(imgH * 10) / 10;
-    const mRounded = Math.round(Math.abs(m) * 100) / 100;
-
-    return {
-      difficulty,
-      question: `焦点距離 ${f} cm の凸レンズを用い、物体をレンズから ${a} cm においた。\n(1) 倍率を求めよ。\n(2) 物体の高さが ${objH} cm のとき、像の高さを求めよ。`,
-      params: { '焦点距離 f': `${f} cm`, '物体距離 a': `${a} cm`, '物体の高さ': `${objH} cm` },
-      answer: `
-        <strong>(1) 倍率：</strong><br>
-        b = ${Math.round(b * 10) / 10} cm<br>
-        m = b/a = <span class="answer-key">${mRounded}</span><br><br>
-        <strong>(2) 像の高さ：</strong><br>
-        ${objH} × ${mRounded} = <span class="answer-key">${imgHRounded} cm</span>
-      `,
-      draw: (canvas) => drawLensDiagram(canvas, f, a, b),
-    };
-  }
-
-  function genConcave(difficulty) {
-    const f = pick([10, 15, 20]);
-    const a = pick([2*f, 3*f, 4*f]);
-    // Concave mirror: same formula as lens
-    const b = Optics.lensEquation(a, f);
-    const bRounded = Math.round(b * 10) / 10;
-
-    return {
-      difficulty,
-      question: `焦点距離 ${f} cm の凹面鏡から、物体を ${a} cm 前方においた。\n像は鏡の前方何 cm にできるか。`,
-      params: { '焦点距離 f': `${f} cm`, '物体距離 a': `${a} cm` },
-      answer: `
-        球面鏡の式：1/f = 1/a + 1/b<br>
-        b = <span class="answer-key">${bRounded} cm</span>（実像）
-      `,
-      draw: null,
-    };
-  }
-
-  function genMirror(difficulty) {
-    const dist = pick([30, 40, 50, 60, 80, 100]);
-    return {
-      difficulty,
-      question: `鏡の前方 ${dist} cm に物体がある。\n平面鏡によってできる像の位置を答えよ。また、実像か虚像かを答えよ。`,
-      params: { '物体の距離': `${dist} cm` },
-      answer: `
-        平面鏡の場合、像は鏡の後ろ（鏡面対称の位置）<br>
-        像の位置：<span class="answer-key">鏡の後方 ${dist} cm</span><br>
-        像の種類：<span class="answer-key">虚像</span>（正立等倍）
-      `,
-      draw: null,
-    };
-  }
-
-  /* ---- Canvas diagram drawing ---- */
-  function drawLensDiagram(canvas, f, a, b) {
+  function setupCanvas(canvas) {
     const ctx = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
-    const CX = W * 0.5, CY = H * 0.5;
-    const OC = new OpticsCanvas(canvas);
-    OC.drawBackground();
+    ctx.fillStyle = '#fafafa';
+    ctx.fillRect(0, 0, W, H);
+    return { ctx, W, H, CX: W * 0.45, CY: H * 0.5 };
+  }
 
-    const scale = Math.min(W / (Math.max(a, b) * 2 + 40), 3);
-    const lensX = CX;
-
+  function drawLensSetup(canvas, f, a, scale) {
+    const { ctx, W, H, CX, CY } = setupCanvas(canvas);
     // Axis
-    ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1;
     ctx.setLineDash([4, 4]);
     ctx.beginPath(); ctx.moveTo(0, CY); ctx.lineTo(W, CY); ctx.stroke();
     ctx.setLineDash([]);
 
+    const lx = CX;
+    const lensH = H * 0.7;
+
     // Lens
     ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(lensX, CY - H * 0.4); ctx.lineTo(lensX, CY + H * 0.4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(lx, CY - lensH / 2); ctx.lineTo(lx, CY + lensH / 2); ctx.stroke();
+    // Arrowheads on lens
+    ctx.fillStyle = '#2563eb';
+    ctx.beginPath(); ctx.moveTo(lx - 6, CY - lensH / 2 + 8); ctx.lineTo(lx, CY - lensH / 2); ctx.lineTo(lx + 6, CY - lensH / 2 + 8); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(lx - 6, CY + lensH / 2 - 8); ctx.lineTo(lx, CY + lensH / 2); ctx.lineTo(lx + 6, CY + lensH / 2 - 8); ctx.fill();
 
-    // Object
-    const objX = lensX - a * scale;
-    if (objX > 0) {
-      ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(objX, CY); ctx.lineTo(objX, CY - 28); ctx.stroke();
-      ctx.fillStyle = '#f59e0b';
-      ctx.beginPath(); ctx.moveTo(objX, CY - 28); ctx.lineTo(objX-5, CY-20); ctx.lineTo(objX+5, CY-20); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#f59e0b';
-      ctx.font = '10px sans-serif'; ctx.fillText('物体', objX - 14, CY - 32);
-    }
-
-    // F marks
-    const f1X = lensX + f * scale, f2X = lensX - f * scale;
-    [f1X, f2X].forEach(fx => {
-      if (fx > 0 && fx < W) {
-        ctx.fillStyle = '#10b981';
-        ctx.beginPath(); ctx.arc(fx, CY, 4, 0, Math.PI * 2); ctx.fill();
-        ctx.font = '10px sans-serif'; ctx.fillStyle = '#10b981';
-        ctx.fillText('F', fx - 4, CY + 18);
+    // Focal points
+    const fPx = f * scale;
+    ctx.fillStyle = '#222'; ctx.font = 'bold 11px sans-serif';
+    [[lx + fPx, 'F'], [lx - fPx, 'F'], [lx + 2 * fPx, '2F'], [lx - 2 * fPx, '2F']].forEach(([x, label]) => {
+      if (x > 10 && x < W - 10) {
+        ctx.beginPath(); ctx.arc(x, CY, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.fillText(label, x - 5, CY + 16);
       }
     });
 
-    // Image
-    const imgX = lensX + b * scale;
-    const isReal = b > 0;
-    if (imgX > 0 && imgX < W) {
-      ctx.strokeStyle = isReal ? '#f43f5e' : '#a78bfa'; ctx.lineWidth = 1.5;
-      ctx.setLineDash(isReal ? [] : [4, 4]);
-      ctx.beginPath(); ctx.moveTo(imgX, CY); ctx.lineTo(imgX, CY - 22); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = isReal ? '#f43f5e' : '#a78bfa';
-      ctx.font = '10px sans-serif';
-      ctx.fillText(isReal ? '実像' : '虚像', imgX - 10, CY - 28);
+    // Object arrow
+    const objX = lx - a * scale;
+    const objH = 40;
+    if (objX > 10) {
+      ctx.strokeStyle = '#e67e00'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(objX, CY); ctx.lineTo(objX, CY - objH); ctx.stroke();
+      ctx.fillStyle = '#e67e00';
+      ctx.beginPath(); ctx.moveTo(objX, CY - objH); ctx.lineTo(objX - 5, CY - objH + 8); ctx.lineTo(objX + 5, CY - objH + 8); ctx.closePath(); ctx.fill();
     }
+
+    return { ctx, W, H, CX, CY, lx, objX, objH, fPx };
+  }
+
+  function drawLensConstruction(canvas, f, a, b, scale) {
+    const setup = drawLensSetup(canvas, f, a, scale);
+    const { ctx, W, H, CX, CY, lx, objX, objH, fPx } = setup;
+
+    const srcY = CY - objH;
+    const imgX = lx + b * scale;
+    const m = -b / a;
+    const imgY = CY - objH * m;
+
+    // Construction ray 1: parallel to axis → through F on other side
+    ctx.strokeStyle = 'rgba(37,99,235,0.6)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(objX, srcY); ctx.lineTo(lx, srcY); ctx.stroke();
+    // Extended to image (or beyond)
+    const endX1 = Math.max(imgX, W);
+    const slope1 = (CY - srcY) / fPx; // through focal point
+    const endY1 = srcY + slope1 * (endX1 - lx);
+    ctx.beginPath(); ctx.moveTo(lx, srcY); ctx.lineTo(endX1, endY1); ctx.stroke();
+
+    // Construction ray 2: through lens center (straight)
+    ctx.strokeStyle = 'rgba(220,60,60,0.6)'; ctx.lineWidth = 1.5;
+    const slope2 = (CY - srcY) / (lx - objX);
+    const farX2 = Math.max(imgX, W);
+    const farY2 = srcY + (CY - srcY) * (farX2 - objX) / (lx - objX);
+    ctx.beginPath(); ctx.moveTo(objX, srcY); ctx.lineTo(farX2, farY2); ctx.stroke();
+
+    // Construction ray 3: through F on same side → parallel after lens
+    ctx.strokeStyle = 'rgba(16,160,80,0.6)'; ctx.lineWidth = 1.5;
+    const lensY3 = srcY + (CY - srcY) * (lx - objX) / (lx - fPx - objX);
+    ctx.beginPath(); ctx.moveTo(objX, srcY); ctx.lineTo(lx, lensY3); ctx.stroke();
+    const farX3 = Math.max(imgX, W);
+    ctx.beginPath(); ctx.moveTo(lx, lensY3); ctx.lineTo(farX3, lensY3); ctx.stroke();
+
+    // Image arrow
+    if (b > 0 && imgX > 10 && imgX < W - 10) {
+      ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(imgX, CY); ctx.lineTo(imgX, imgY); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#dc2626';
+      const dir = imgY < CY ? 1 : -1;
+      ctx.beginPath(); ctx.moveTo(imgX, imgY); ctx.lineTo(imgX - 5, imgY + dir * 8); ctx.lineTo(imgX + 5, imgY + dir * 8); ctx.closePath(); ctx.fill();
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText('像', imgX + 8, imgY);
+    } else if (b < 0) {
+      // Virtual image (on same side as object)
+      const vImgX = lx + b * scale;
+      if (vImgX > 10) {
+        ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 2;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(vImgX, CY); ctx.lineTo(vImgX, imgY); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#a855f7'; ctx.font = 'bold 11px sans-serif';
+        ctx.fillText('虚像', vImgX + 8, imgY);
+      }
+    }
+  }
+
+  /* ---- Concave mirror helpers ---- */
+
+  function drawConcaveSetup(canvas, f, a, scale) {
+    const { ctx, W, H, CX, CY } = setupCanvas(canvas);
+    const mx = CX + 50; // mirror on right side
+
+    // Axis
+    ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(0, CY); ctx.lineTo(W, CY); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Concave mirror (arc)
+    const mirrorH = H * 0.6;
+    const R = 2 * f * scale;
+    ctx.strokeStyle = '#222'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(mx + R, CY, R, Math.PI - Math.asin(mirrorH / 2 / R), Math.PI + Math.asin(mirrorH / 2 / R));
+    ctx.stroke();
+    // Hatching
+    for (let i = -mirrorH / 2; i <= mirrorH / 2; i += 8) {
+      const angle = Math.asin(i / R);
+      const bx = mx + R - R * Math.cos(angle);
+      const by = CY + i;
+      ctx.strokeStyle = '#888'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + 6, by - 4); ctx.stroke();
+    }
+
+    // F and C points
+    const fPx = f * scale;
+    ctx.fillStyle = '#222'; ctx.font = 'bold 11px sans-serif';
+    ctx.beginPath(); ctx.arc(mx - fPx, CY, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillText('F', mx - fPx - 4, CY + 16);
+    ctx.beginPath(); ctx.arc(mx - 2 * fPx, CY, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillText('C', mx - 2 * fPx - 4, CY + 16);
+
+    // Object arrow
+    const objX = mx - a * scale;
+    const objH = 35;
+    if (objX > 10) {
+      ctx.strokeStyle = '#e67e00'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(objX, CY); ctx.lineTo(objX, CY - objH); ctx.stroke();
+      ctx.fillStyle = '#e67e00';
+      ctx.beginPath(); ctx.moveTo(objX, CY - objH); ctx.lineTo(objX - 5, CY - objH + 8); ctx.lineTo(objX + 5, CY - objH + 8); ctx.closePath(); ctx.fill();
+    }
+
+    return { ctx, W, H, CX, CY, mx, objX, objH: 35, fPx };
+  }
+
+  function drawConcaveConstruction(canvas, f, a, b, scale) {
+    const setup = drawConcaveSetup(canvas, f, a, scale);
+    const { ctx, W, H, CX, CY, mx, objX, objH, fPx } = setup;
+
+    const srcY = CY - objH;
+    const m = -b / a;
+    const imgX = mx - b * scale;
+    const imgY = CY - objH * m;
+
+    // Construction ray 1: parallel to axis → reflects through F (straight line approximation)
+    ctx.strokeStyle = 'rgba(37,99,235,0.6)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(objX, srcY); ctx.lineTo(mx, srcY); ctx.stroke();
+    // Reflected: from (mx, srcY) through (mx-fPx, CY) extended left
+    const slope1 = (CY - srcY) / (mx - fPx - mx);
+    const endX1 = 0;
+    const endY1 = srcY + slope1 * (endX1 - mx);
+    ctx.beginPath(); ctx.moveTo(mx, srcY); ctx.lineTo(endX1, endY1); ctx.stroke();
+
+    // Construction ray 2: through C → reflects back on itself
+    ctx.strokeStyle = 'rgba(220,60,60,0.6)'; ctx.lineWidth = 1.5;
+    const cX = mx - 2 * fPx;
+    // Line from source to C, then from C back (same line)
+    const endX2 = 0;
+    const slope2 = (CY - srcY) / (cX - objX);
+    const endY2 = srcY + slope2 * (endX2 - objX);
+    ctx.beginPath(); ctx.moveTo(objX, srcY); ctx.lineTo(endX2, endY2); ctx.stroke();
+    // The line through C hits mirror and bounces back through C
+    ctx.beginPath(); ctx.moveTo(objX, srcY);
+    const mirrorY2 = srcY + (CY - srcY) * (mx - objX) / (cX - objX);
+    ctx.lineTo(mx, mirrorY2); ctx.stroke();
+
+    // Image arrow
+    if (b > 0 && imgX > 10 && imgX < W - 10) {
+      ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(imgX, CY); ctx.lineTo(imgX, imgY); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#dc2626'; ctx.font = 'bold 11px sans-serif';
+      ctx.fillText('像', imgX + 8, imgY);
+    }
+  }
+
+  /* ---- Plane mirror helpers ---- */
+
+  function drawMirrorSetup(canvas, dist) {
+    const { ctx, W, H, CX, CY } = setupCanvas(canvas);
+    const mx = CX;
+
+    // Mirror (vertical line with hatching)
+    ctx.strokeStyle = '#222'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(mx, H * 0.1); ctx.lineTo(mx, H * 0.9); ctx.stroke();
+    for (let y = H * 0.1; y < H * 0.9; y += 8) {
+      ctx.strokeStyle = '#888'; ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(mx, y); ctx.lineTo(mx + 6, y - 4); ctx.stroke();
+    }
+
+    // Object
+    const scale = Math.min((W * 0.4) / dist, 3);
+    const objX = mx - dist * scale;
+    const objH = 30;
+    ctx.strokeStyle = '#e67e00'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(objX, CY); ctx.lineTo(objX, CY - objH); ctx.stroke();
+    ctx.fillStyle = '#e67e00';
+    ctx.beginPath(); ctx.moveTo(objX, CY - objH); ctx.lineTo(objX - 5, CY - objH + 8); ctx.lineTo(objX + 5, CY - objH + 8); ctx.closePath(); ctx.fill();
+    ctx.font = '11px sans-serif'; ctx.fillStyle = '#e67e00';
+    ctx.fillText('物体', objX - 14, CY - objH - 6);
+
+    // Distance label
+    ctx.fillStyle = '#222'; ctx.font = '11px sans-serif';
+    ctx.fillText(dist + ' cm', (objX + mx) / 2 - 12, CY + 18);
+
+    return { ctx, W, H, CX, CY, mx, objX, objH, scale };
+  }
+
+  function drawMirrorConstruction(canvas, dist) {
+    const setup = drawMirrorSetup(canvas, dist);
+    const { ctx, W, H, CX, CY, mx, objX, objH, scale } = setup;
+
+    // Virtual image (symmetric about mirror)
+    const imgX = mx + dist * scale;
+    ctx.strokeStyle = '#a855f7'; ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(imgX, CY); ctx.lineTo(imgX, CY - objH); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#a855f7';
+    ctx.beginPath(); ctx.moveTo(imgX, CY - objH); ctx.lineTo(imgX - 5, CY - objH + 8); ctx.lineTo(imgX + 5, CY - objH + 8); ctx.closePath(); ctx.fill();
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText('虚像', imgX + 8, CY - objH);
+
+    // Connecting lines (rays from object tip → mirror → eye, extended behind as virtual)
+    ctx.strokeStyle = 'rgba(37,99,235,0.5)'; ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(objX, CY - objH); ctx.lineTo(imgX, CY - objH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(objX, CY); ctx.lineTo(imgX, CY); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#222'; ctx.font = '11px sans-serif';
+    ctx.fillText(dist + ' cm', (mx + imgX) / 2 - 12, CY + 18);
+  }
+
+  /* ============================================================
+     Problem generators — all construction/drawing type
+  ============================================================ */
+
+  function genLensConstruction(difficulty) {
+    const fValues = { easy: [10, 15, 20], medium: [10, 12, 15, 20], hard: [8, 10, 12, 15, 20] };
+    const f = pick(fValues[difficulty] || fValues.medium);
+    let aMultiplier;
+    if (difficulty === 'easy') aMultiplier = pick([2, 3]);
+    else if (difficulty === 'medium') aMultiplier = pick([1.5, 2, 3, 4]);
+    else aMultiplier = pick([1.2, 1.5, 2, 3, 4, 5]);
+    const a = f * aMultiplier;
+    const b = (f * a) / (a - f);
+    const scale = Math.min(160 / Math.max(a, b, 2 * f), 3);
+
+    return {
+      difficulty,
+      question: `焦点距離 ${f} cm の凸レンズから ${a} cm の位置に物体がある。\n作図により像の位置を求めよ。（3本の作図線を描きなさい）`,
+      params: { '焦点距離 f': `${f} cm`, '物体距離 a': `${a} cm` },
+      answer: `
+        <strong>作図の手順：</strong><br>
+        ① 光軸に平行な光線 → レンズ通過後、反対側の焦点を通る（青線）<br>
+        ② レンズの中心を通る光線 → そのまま直進（赤線）<br>
+        ③ 手前の焦点を通る光線 → レンズ通過後、光軸に平行（緑線）<br>
+        3本の交点が像の位置。<br><br>
+        <strong>像の位置：</strong> b = <span class="answer-key">${Math.round(b * 10) / 10} cm</span>（${b > 0 ? '実像・倒立' : '虚像・正立'}）
+      `,
+      drawSetup: (c) => drawLensSetup(c, f, a, scale),
+      drawAnswer: (c) => drawLensConstruction(c, f, a, b, scale),
+    };
+  }
+
+  function genLensVirtualConstruction(difficulty) {
+    const f = pick([10, 15, 20]);
+    let aFrac;
+    if (difficulty === 'easy') aFrac = 0.5;
+    else aFrac = pick([0.3, 0.4, 0.5, 0.6, 0.7, 0.8]);
+    const a = Math.round(f * aFrac);
+    const b = (f * a) / (a - f); // negative for virtual
+    const scale = Math.min(100 / Math.max(a, Math.abs(b), 2 * f), 3);
+
+    return {
+      difficulty,
+      question: `焦点距離 ${f} cm の凸レンズから ${a} cm の位置に物体がある（焦点より内側）。\n作図により虚像の位置を求めよ。`,
+      params: { '焦点距離 f': `${f} cm`, '物体距離 a': `${a} cm` },
+      answer: `
+        焦点の内側に物体を置くと、レンズを通った光は発散し、\n延長線の交点に正立虚像ができる。<br><br>
+        <strong>像の位置：</strong> b = <span class="answer-key">${Math.round(b * 10) / 10} cm</span>（虚像・正立・拡大）
+      `,
+      drawSetup: (c) => drawLensSetup(c, f, a, scale),
+      drawAnswer: (c) => drawLensConstruction(c, f, a, b, scale),
+    };
+  }
+
+  function genConcaveConstruction(difficulty) {
+    const fValues = { easy: [10, 15, 20], medium: [10, 12, 15], hard: [8, 10, 12, 15] };
+    const f = pick(fValues[difficulty] || fValues.medium);
+    let aMultiplier;
+    if (difficulty === 'easy') aMultiplier = pick([2, 3]);
+    else aMultiplier = pick([1.5, 2, 3, 4]);
+    const a = f * aMultiplier;
+    const b = (f * a) / (a - f);
+    const scale = Math.min(120 / Math.max(a, b, 2 * f), 2.5);
+
+    return {
+      difficulty,
+      question: `焦点距離 ${f} cm の凹面鏡から ${a} cm 前方に物体がある。\n作図（直線による近似）で像の位置を求めよ。`,
+      params: { '焦点距離 f': `${f} cm`, '物体距離 a': `${a} cm`, '曲率中心 C': `${2 * f} cm` },
+      answer: `
+        <strong>作図の手順（直線近似）：</strong><br>
+        ① 光軸に平行な光線 → 鏡で反射後、焦点Fを通る（青線）<br>
+        ② 曲率中心Cを通る光線 → 鏡で同じ道を戻る（赤線）<br>
+        2本の交点が像の位置。<br><br>
+        <strong>像の位置：</strong> b = <span class="answer-key">${Math.round(b * 10) / 10} cm</span>（${b > 0 ? '実像・倒立' : '虚像・正立'}）
+      `,
+      drawSetup: (c) => drawConcaveSetup(c, f, a, scale),
+      drawAnswer: (c) => drawConcaveConstruction(c, f, a, b, scale),
+    };
+  }
+
+  function genMirrorConstruction(difficulty) {
+    const dist = pick([20, 30, 40, 50, 60, 80]);
+    return {
+      difficulty,
+      question: `平面鏡の前方 ${dist} cm に物体がある。\n像の位置と種類を作図で示せ。`,
+      params: { '物体の距離': `${dist} cm` },
+      answer: `
+        平面鏡では、像は鏡面に関して物体と対称な位置にできる。<br>
+        <strong>像の位置：</strong> <span class="answer-key">鏡の後方 ${dist} cm</span><br>
+        <strong>像の種類：</strong> <span class="answer-key">虚像（正立等倍）</span>
+      `,
+      drawSetup: (c) => drawMirrorSetup(c, dist),
+      drawAnswer: (c) => drawMirrorConstruction(c, dist),
+    };
   }
 
   /* ---- Generate problems ---- */
   function generateProblems() {
     const type = document.getElementById('sel-type').value;
     const count = parseInt(document.getElementById('range-count').value);
-    const showDiagrams = document.getElementById('cb-diagrams').checked;
-    const useIntegers = document.getElementById('cb-integers').checked;
     const difficulties = Array.from(document.querySelectorAll('input[name="diff"]:checked')).map(el => el.value);
 
     if (!difficulties.length) { alert('難易度を1つ以上選択してください'); return; }
 
     const generators = {
-      lens_ab: genLensAB,
-      lens_a:  genLensA,
-      lens_f:  genLensF,
-      mag:     genMag,
-      concave: genConcave,
-      mirror:  genMirror,
+      lens_construction:   genLensConstruction,
+      lens_virtual:        genLensVirtualConstruction,
+      concave_construction: genConcaveConstruction,
+      mirror_construction: genMirrorConstruction,
     };
     const gen = generators[type];
     if (!gen) return;
 
     const list = document.getElementById('problemList');
     list.innerHTML = '';
+    window._problems = {};
 
     const countBadge = document.getElementById('countBadge');
     countBadge.textContent = `${count}問`;
@@ -543,12 +685,8 @@
     for (let i = 0; i < count; i++) {
       const diff = pick(difficulties);
       let problem;
-      try {
-        problem = gen(diff, useIntegers);
-      } catch(e) {
-        console.warn('Problem generation error:', e);
-        continue;
-      }
+      try { problem = gen(diff); } catch(e) { console.warn('Problem generation error:', e); continue; }
+      window._problems[i] = problem;
 
       const card = document.createElement('div');
       card.className = 'problem-card';
@@ -569,23 +707,34 @@
               <span class="problem-card__param-value">${v}</span>
             </div>`).join('')}
         </div>
-        ${showDiagrams && problem.draw ? `<canvas class="problem-canvas" id="pcanvas-${i}" width="400" height="140"></canvas>` : ''}
+        <canvas class="problem-canvas" id="pcanvas-${i}" width="500" height="200"></canvas>
         <div>
           <button class="btn btn--ghost btn--sm no-print" onclick="toggleAnswer(${i})" style="font-size:var(--font-size-xs);">
             解答を表示/非表示
           </button>
         </div>
-        <div class="problem-card__answer" id="ans-${i}">${problem.answer}</div>
+        <div class="problem-card__answer" id="ans-${i}">
+          ${problem.answer}
+          <canvas class="problem-canvas" id="acanvas-${i}" width="500" height="200" style="margin-top:var(--space-3);"></canvas>
+        </div>
       `;
       list.appendChild(card);
 
-      if (showDiagrams && problem.draw) {
-        setTimeout(() => {
-          const c = document.getElementById(`pcanvas-${i}`);
-          if (c) problem.draw(c);
-        }, 50);
-      }
+      // Draw setup diagram
+      setTimeout(() => {
+        const c = document.getElementById('pcanvas-${i}');
+        if (c && problem.drawSetup) problem.drawSetup(c);
+      }, 50);
     }
+
+    // Draw all setup diagrams (using correct references)
+    setTimeout(() => {
+      for (let j = 0; j < count; j++) {
+        const c = document.getElementById('pcanvas-' + j);
+        const prob = window._problems[j];
+        if (c && prob && prob.drawSetup) prob.drawSetup(c);
+      }
+    }, 100);
 
     document.getElementById('printSubtitle').textContent =
       `問題タイプ：${document.getElementById('sel-type').selectedOptions[0].text} | ${count}問`;

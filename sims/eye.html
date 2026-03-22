@@ -140,20 +140,16 @@
 
   function initPositions() {
     const w = oc.width, h = oc.height;
-    srcX = w * 0.15;
-    srcY = h * 0.38;
+    srcX = w / 6;
+    srcY = h / 2;
   }
   oc.onResize = () => initPositions();
   initPositions();
 
-  function lensX() { return oc.width * 0.48; }
-  // Map focal percent 10-90 → focal length
-  function focalLen() {
-    const w = oc.width;
-    return w * (0.06 + (focalPercent - 10) / 80 * 0.14);
-  }
-  // Retina is fixed at approx lensX + retinaDist
-  function retinaX() { return lensX() + oc.width * 0.28; }
+  // Lens at center (matching archived slitx = w/2)
+  function lensX() { return oc.width / 2; }
+  // Focal length matching archived: shou.value * w / 400
+  function focalLen() { return focalPercent * oc.width / 400; }
 
   function draw() {
     const w = oc.width, h = oc.height;
@@ -164,7 +160,7 @@
 
     const lx = lensX();
     const f = focalLen();
-    const rx = retinaX();
+    const aperture = h / 3; // slithole from archived = h / 3
 
     // Image calculation
     const a = lx - srcX;
@@ -174,26 +170,13 @@
     const srcOff = srcY - h / 2;
     const imgY = h / 2 - m * srcOff;
 
-    // Draw eye outline (oval)
-    const eyeL = lx - 8;
-    const eyeR = rx + 18;
-    const eyeW = eyeR - eyeL;
-    const eyeH = h * 0.48;
-    const ctx = oc.ctx;
-    ctx.beginPath();
-    ctx.ellipse((eyeL + eyeR) / 2, h / 2, eyeW / 2, eyeH / 2, 0, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
     // Optical axis
     oc.drawAxis();
 
-    // Focal points
+    // Focal point
     oc.drawFocusPoint(lx + f, h / 2, '#dc2626aa', 'f');
 
-    // Rays
-    const aperture = h * 0.2; // pupil size
+    // Rays (matching archived: extend refracted rays to canvas edge)
     const numRays = showAllRays ? rayCount * 2 : 5;
     for (let i = 0; i <= numRays; i++) {
       const t = numRays === 0 ? 0 : (i / numRays) - 0.5;
@@ -201,48 +184,74 @@
 
       oc.drawRay(srcX, srcY, lx, hitY, '#e67e00', showAllRays ? 1 : 2, showAllRays ? 0.5 : 1);
 
-      if (isFinite(imgX)) {
+      if (isFinite(imgX) && Math.abs(imgX - lx) > 0.01) {
+        // Extend reflected ray to canvas edge (like archived)
         const dx = imgX - lx, dy = imgY - hitY;
-        const L = Math.sqrt(dx * dx + dy * dy);
-        // Extend to retina or beyond
-        const t_ret = (rx - lx) / dx;
-        const retY = hitY + dy * t_ret;
-        oc.drawRay(lx, hitY, rx, retY, '#e67e00', showAllRays ? 1 : 2, showAllRays ? 0.4 : 0.9);
+        const extEnd = w;
+        const tExt = (extEnd - lx) / dx;
+        const endY = hitY + dy * tExt;
+        oc.drawRay(lx, hitY, extEnd, endY, '#e67e0088', showAllRays ? 1 : 2, showAllRays ? 0.4 : 0.9);
       }
     }
 
-    // Retina
-    ctx.beginPath();
-    ctx.moveTo(rx, h / 2 - eyeH / 2 * 0.9);
-    ctx.lineTo(rx, h / 2 + eyeH / 2 * 0.9);
-    ctx.strokeStyle = 'rgba(200,30,30,0.7)';
+    // Construction lines
+    if (showConstruction) {
+      // Ray through center (undeviated)
+      oc.drawVirtualRay(srcX, srcY, w, h / 2 + (srcY - h / 2) * (w - srcX) / (lx - srcX) * (-1), 'rgba(37,99,235,0.5)', 1.5);
+      // Parallel ray → through focal point
+      oc.drawVirtualRay(srcX, srcY, lx, srcY, 'rgba(37,99,235,0.5)', 1.5);
+      const focEndY = srcY + (h / 2 - srcY) * (w - lx) / f;
+      oc.drawVirtualRay(lx, srcY, w, focEndY, 'rgba(37,99,235,0.5)', 1.5);
+      // Through near focal point → parallel
+      oc.drawVirtualRay(srcX, srcY, lx, h / 2, 'rgba(37,99,235,0.5)', 1.5);
+    }
+
+    // Eye lens drawing (focal-dependent shape, matching archived)
+    const ctx = oc.ctx;
+    const lensw = 40 * (1 - focalPercent / 100);
+    ctx.strokeStyle = '#2563eb';
     ctx.lineWidth = 3;
+    // Left curve
+    ctx.beginPath();
+    ctx.moveTo(lx, h / 2 - aperture / 2);
+    ctx.quadraticCurveTo(lx - lensw, h / 2, lx, h / 2 + aperture / 2);
     ctx.stroke();
-    oc.drawLabel(rx + 14, h / 2, '網膜', 'rgba(200,30,30,0.8)', 10, 'left');
+    // Right curve
+    ctx.beginPath();
+    ctx.moveTo(lx, h / 2 - aperture / 2);
+    ctx.quadraticCurveTo(lx + lensw, h / 2, lx, h / 2 + aperture / 2);
+    ctx.stroke();
+    // Fill
+    ctx.beginPath();
+    ctx.moveTo(lx, h / 2 - aperture / 2);
+    ctx.quadraticCurveTo(lx + lensw, h / 2, lx, h / 2 + aperture / 2);
+    ctx.quadraticCurveTo(lx - lensw, h / 2, lx, h / 2 - aperture / 2);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(37,99,235,0.12)';
+    ctx.fill();
+    oc.drawLabel(lx, h / 2 - aperture / 2 - 14, '水晶体', 'rgba(37,99,235,0.8)', 10);
 
-    // Focus spot on retina
-    if (isFinite(imgX)) {
-      const spotSize = Math.abs(imgX - rx);
-      const focusOnRetina = spotSize < w * 0.015;
-      if (focusOnRetina) {
-        ctx.beginPath();
-        ctx.arc(rx, imgY, 5, 0, Math.PI * 2);
-        ctx.fillStyle = '#e67e00';
-        ctx.fill();
-      }
-    }
+    // Eye arc (matching archived geometry exactly)
+    const eyeCX = lx + w / 10;
+    const eyeR = Math.sqrt((w / 10) * (w / 10) + (aperture / 2) * (aperture / 2));
+    const arcAngle = Math.asin(eyeR / aperture);
+    ctx.beginPath();
+    ctx.arc(eyeCX, h / 2, eyeR, arcAngle + Math.PI / 2, 2 * Math.PI - arcAngle - Math.PI / 2, true);
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = 6;
+    ctx.stroke();
 
-    // Lens (eye lens)
-    oc.drawConvexLens(lx, h, eyeH * 0.4);
-    oc.drawLabel(lx, h / 2 - eyeH / 2 * 0.5 - 14, '水晶体', 'rgba(37,99,235,0.8)', 10);
+    // Retina label at back of eye
+    const retinaX = eyeCX + eyeR;
+    oc.drawLabel(retinaX, h / 2 - 14, '網膜', 'rgba(200,30,30,0.8)', 10, 'left');
 
     // Source
     oc.drawPointSource(srcX, srcY, 8);
     oc.drawLabel(srcX, srcY - 18, '光源', 'rgba(200,110,0,0.85)', 11);
 
-    // Info
-    const retinaDist = retinaX() - lensX();
-    const onFocus = isFinite(b) && Math.abs(b - retinaDist) / retinaDist < 0.05;
+    // Info panel
+    const retinaDist = eyeCX - lx; // distance from lens to eye center
+    const onFocus = isFinite(b) && Math.abs(b - retinaDist) / retinaDist < 0.08;
     const typeEl = document.getElementById('info-focus');
     if (typeEl) {
       typeEl.textContent = onFocus ? '✓ ピントが合っている' : isFinite(b) && b > retinaDist ? '後ろにずれている' : '前にずれている';
@@ -270,7 +279,7 @@
   }, { passive: false });
   cvs.addEventListener('click', () => { showAllRays = !showAllRays; });
 
-  UI.bindRange('range-rays', 'val-rays', v => { rayCount = Math.round(v); });
+  UI.bindRange('range-rays', 'val-rays', v => { rayCount = Math.round(v); document.getElementById('val-rays').textContent = rayCount * 2; });
   UI.bindRange('range-focal', 'val-focal', v => { focalPercent = v; });
   UI.bindCheckbox('cb-construction', v => { showConstruction = v; });
   UI.bindCheckbox('cb-allrays', v => { showAllRays = v; });

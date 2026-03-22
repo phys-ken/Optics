@@ -117,16 +117,16 @@ PASS  generateProblems()
 PASS  window.print
 PASS  .problem-card
 PASS  toggleAnswer()
-PASS  lensEquation call
+WARN  Optics.lensEquation not in practice.html
 PASS  lens.html: uses lensEquation()
 PASS  lens-object.html: uses lensEquation()
-PASS  lens-wide.html: uses lensEquation()
+PASS  lens-wide.html: contains lens formula notation
 PASS  concave.html: contains lens formula notation
-PASS  practice.html: uses lensEquation()
+WARN  practice.html: lens formula reference unclear
 PASS  css/main.css: 16KB
 PASS  js/optics.js: 16KB
 PASS  sims/3d.html: 23KB
-PASS  sims/practice.html: 21KB
+PASS  sims/practice.html: 29KB
 PASS  sims/lens.html: 13KB
 PASS  Cleaned: Lens.html
 PASS  Cleaned: LensWide.html
@@ -150,9 +150,7 @@ PASS  slits.html inline script[0]: syntax OK
 PASS  CDN OK (200): ...https://github.com/phys-ken/Optics
 PASS  index.html: drawConvexLens uses default color
 PASS  index.html: drawConvexLens uses default color
-PASS  eye.html: drawConvexLens uses default color
 PASS  lens-object.html: drawConvexLens uses default color
-PASS  lens-wide.html: drawConvexLens uses default color
 PASS  lens.html: drawConvexLens uses default color
 PASS  optics.js: no raw hex-append patterns
 PASS  index.html: no ES modules (classic script)
@@ -166,4 +164,4 @@ PASS  mirror.html: no ES modules (classic script)
 PASS  practice.html: no ES modules (classic script)
 PASS  slits.html: no ES modules (classic script)
 
-PASS=167 WARN=0 FAIL=0
+PASS=163 WARN=2 FAIL=0

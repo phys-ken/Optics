@@ -96,9 +96,9 @@
           <div class="control-group">
             <div class="control-row">
               <span class="control-label">焦点距離 (相対)</span>
-              <span class="range-value" id="val-focal">17</span>
+              <span class="range-value" id="val-focal">6</span>
             </div>
-            <input type="range" id="range-focal" min="8" max="30" value="17" step="1">
+            <input type="range" id="range-focal" min="4" max="12" value="6" step="1">
           </div>
 
           <label class="checkbox-label">
@@ -184,7 +184,7 @@
   let showAllRays = true;
   let showConstruction = false;
   let showDimLine = false;
-  let focalRatio = 17; // f = w / focalRatio
+  let focalRatio = 6; // f = w / focalRatio
   let rayCount = 20;
 
   function initPositions() {
@@ -239,7 +239,7 @@
     }
 
     // Draw rays
-    const aperture = h * 0.45;
+    const aperture = h / 3;
     const numRays = showAllRays ? rayCount * 2 : 3;
 
     for (let i = 0; i <= numRays; i++) {
@@ -304,7 +304,7 @@
     }
 
     // Lens
-    oc.drawConvexLens(lx, h, h * 0.8);
+    oc.drawConvexLens(lx, h, h / 3);
     oc.drawLabel(lx, 20, 'レンズ', 'rgba(37,99,235,0.8)', 11);
 
     // Source
@@ -353,7 +353,7 @@
   });
 
   // Controls
-  UI.bindRange('range-rays', 'val-rays', v => { rayCount = Math.round(v); });
+  UI.bindRange('range-rays', 'val-rays', v => { rayCount = Math.round(v); document.getElementById('val-rays').textContent = rayCount * 2; });
   UI.bindRange('range-focal', 'val-focal', v => { focalRatio = v; });
   UI.bindCheckbox('cb-construction', v => { showConstruction = v; });
   UI.bindCheckbox('cb-allrays', v => { showAllRays = v; });
