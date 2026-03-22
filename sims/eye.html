@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>目のしくみ — Optics Lab</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    html, body { height: 100%; overflow: hidden; }
+    .sim-canvas-wrap { height: calc(100vh - 50px - 52px); }
+    @media (max-width: 768px) {
+      html, body { overflow: auto; }
+      .sim-canvas-wrap { height: 55vw; min-height: 220px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="../index.html" class="site-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 2v4M12 18v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M2 12h4M18 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+      </svg>
+      Optics Lab
+    </a>
+    <nav class="site-nav">
+      <a href="lens.html" class="nav-link">レンズ</a>
+      <a href="slits.html" class="nav-link">光線モデル</a>
+      <a href="eye.html" class="nav-link active">目のしくみ</a>
+      <a href="3d.html" class="nav-link">3D</a>
+    </nav>
+  </div>
+</header>
+
+<div class="sim-page">
+  <div class="sim-toolbar">
+    <div>
+      <span style="font-weight:700;">目のしくみ（水晶体の調節）</span>
+    </div>
+    <div class="mode-switcher" id="modeSwitcher" style="margin-left:auto;">
+      <button class="mode-btn active" data-mode="student">自習</button>
+      <button class="mode-btn" data-mode="teacher">授業</button>
+      <button class="mode-btn" data-mode="sheet">作図</button>
+    </div>
+    <button id="btnFullscreen" class="btn btn--ghost btn--sm">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="sim-body" id="simBody">
+    <aside class="sim-sidebar" id="simSidebar">
+      <div>
+        <div class="control-label">コントロール</div>
+        <div style="margin-top:var(--space-3); display:flex; flex-direction:column; gap:var(--space-4);">
+          <div class="control-group">
+            <div class="control-row">
+              <span class="control-label">光線の本数</span>
+              <span class="range-value" id="val-rays">40</span>
+            </div>
+            <input type="range" id="range-rays" min="4" max="80" value="20" step="2">
+          </div>
+          <div class="control-group">
+            <div class="control-row">
+              <span class="control-label">水晶体の焦点距離</span>
+              <span class="range-value" id="val-focal">50</span>
+            </div>
+            <input type="range" id="range-focal" min="10" max="90" value="50" step="1">
+            <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--color-text-muted); margin-top:4px;">
+              <span>近くにピント</span>
+              <span>遠くにピント</span>
+            </div>
+          </div>
+          <label class="checkbox-label">
+            <input type="checkbox" id="cb-construction">
+            作図線を表示
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="cb-allrays" checked>
+            全光線を表示
+          </label>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="info-panel">
+        <div class="info-panel__title">網膜の状態</div>
+        <div class="info-row">
+          <span class="info-row__label">像距離 b</span>
+          <span class="info-row__value" id="info-b">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-row__label">網膜位置</span>
+          <span class="info-row__value" id="info-retina">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-row__label">ピントの状態</span>
+          <span class="info-row__value" id="info-focus" style="font-family:var(--font-body); font-size:11px;">—</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="background: var(--color-surface); border-radius: var(--radius); padding: var(--space-4);">
+        <div class="control-label" style="margin-bottom:var(--space-3);">目の構造</div>
+        <ul style="font-size:var(--font-size-xs); color:var(--color-text-muted); line-height:2; margin-left:var(--space-4);">
+          <li><strong>角膜・水晶体</strong>: 凸レンズとして働く</li>
+          <li><strong>網膜</strong>: 光を感知する</li>
+          <li><strong>調節</strong>: 水晶体の厚みを変えてピントを合わせる</li>
+        </ul>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:var(--font-size-xs); color:var(--color-text-muted);">
+        マウスで光源を動かし、焦点距離スライダーでピントを合わせてみよう
+      </div>
+    </aside>
+
+    <div class="sim-canvas-wrap">
+      <canvas id="simCanvas"></canvas>
+      <div class="canvas-hint">マウスで光源を動かす | スライダーで焦点距離を調整</div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/optics.js"></script>
+<script>
+  const cvs = document.getElementById('simCanvas');
+  const oc = new OpticsCanvas(cvs);
+
+  let srcX, srcY;
+  let showAllRays = true;
+  let showConstruction = false;
+  let focalPercent = 50;
+  let rayCount = 20;
+
+  function initPositions() {
+    const w = oc.width, h = oc.height;
+    srcX = w * 0.15;
+    srcY = h * 0.38;
+  }
+  oc.onResize = () => initPositions();
+  initPositions();
+
+  function lensX() { return oc.width * 0.48; }
+  // Map focal percent 10-90 → focal length
+  function focalLen() {
+    const w = oc.width;
+    return w * (0.06 + (focalPercent - 10) / 80 * 0.14);
+  }
+  // Retina is fixed at approx lensX + retinaDist
+  function retinaX() { return lensX() + oc.width * 0.28; }
+
+  function draw() {
+    const w = oc.width, h = oc.height;
+    if (w <= 0 || h <= 0) return;
+
+    oc.drawBackground('#0f1825');
+    oc.drawGrid(Math.floor(w / 24), 'rgba(255,255,255,0.02)');
+
+    const lx = lensX();
+    const f = focalLen();
+    const rx = retinaX();
+
+    // Image calculation
+    const a = lx - srcX;
+    const b = Optics.lensEquation(a, f);
+    const m = Optics.magnification(a, b);
+    const imgX = lx + b;
+    const srcOff = srcY - h / 2;
+    const imgY = h / 2 - m * srcOff;
+
+    // Draw eye outline (oval)
+    const eyeL = lx - 8;
+    const eyeR = rx + 18;
+    const eyeW = eyeR - eyeL;
+    const eyeH = h * 0.48;
+    const ctx = oc.ctx;
+    ctx.beginPath();
+    ctx.ellipse((eyeL + eyeR) / 2, h / 2, eyeW / 2, eyeH / 2, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Optical axis
+    oc.drawAxis('rgba(255,255,255,0.15)');
+
+    // Focal points
+    oc.drawFocusPoint(lx + f, h / 2, '#fbbf24aa', 'f');
+
+    // Rays
+    const aperture = h * 0.2; // pupil size
+    const numRays = showAllRays ? rayCount * 2 : 5;
+    for (let i = 0; i <= numRays; i++) {
+      const t = numRays === 0 ? 0 : (i / numRays) - 0.5;
+      const hitY = h / 2 + aperture * t;
+
+      oc.drawRay(srcX, srcY, lx, hitY, '#ffd700', showAllRays ? 1 : 2, showAllRays ? 0.5 : 1);
+
+      if (isFinite(imgX)) {
+        const dx = imgX - lx, dy = imgY - hitY;
+        const L = Math.sqrt(dx * dx + dy * dy);
+        // Extend to retina or beyond
+        const t_ret = (rx - lx) / dx;
+        const retY = hitY + dy * t_ret;
+        oc.drawRay(lx, hitY, rx, retY, '#ffd700', showAllRays ? 1 : 2, showAllRays ? 0.4 : 0.9);
+      }
+    }
+
+    // Retina
+    ctx.beginPath();
+    ctx.moveTo(rx, h / 2 - eyeH / 2 * 0.9);
+    ctx.lineTo(rx, h / 2 + eyeH / 2 * 0.9);
+    ctx.strokeStyle = 'rgba(255,100,100,0.7)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    oc.drawLabel(rx + 14, h / 2, '網膜', 'rgba(255,100,100,0.8)', 10, 'left');
+
+    // Focus spot on retina
+    if (isFinite(imgX)) {
+      const spotSize = Math.abs(imgX - rx);
+      const focusOnRetina = spotSize < w * 0.015;
+      if (focusOnRetina) {
+        ctx.beginPath();
+        ctx.arc(rx, imgY, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffd700';
+        ctx.fill();
+      }
+    }
+
+    // Lens (eye lens)
+    oc.drawConvexLens(lx, h, eyeH * 0.4);
+    oc.drawLabel(lx, h / 2 - eyeH / 2 * 0.5 - 14, '水晶体', 'rgba(96,165,250,0.8)', 10);
+
+    // Source
+    oc.drawPointSource(srcX, srcY, 8, '#ffd700');
+    oc.drawLabel(srcX, srcY - 18, '光源', 'rgba(255,215,0,0.8)', 11);
+
+    // Info
+    const retinaDist = retinaX() - lensX();
+    const onFocus = isFinite(b) && Math.abs(b - retinaDist) / retinaDist < 0.05;
+    const typeEl = document.getElementById('info-focus');
+    if (typeEl) {
+      typeEl.textContent = onFocus ? '✓ ピントが合っている' : isFinite(b) && b > retinaDist ? '後ろにずれている' : '前にずれている';
+      typeEl.style.color = onFocus ? 'var(--color-success)' : 'var(--color-warn)';
+    }
+    const bEl = document.getElementById('info-b');
+    if (bEl) bEl.textContent = isFinite(b) ? b.toFixed(0) : '∞';
+    const rEl = document.getElementById('info-retina');
+    if (rEl) rEl.textContent = retinaDist.toFixed(0);
+  }
+
+  cvs.addEventListener('mousemove', e => {
+    const rect = cvs.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (cvs.width / rect.width);
+    const my = (e.clientY - rect.top) * (cvs.height / rect.height);
+    if (mx < lensX() - 5) { srcX = mx; srcY = my; }
+  });
+  cvs.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const rect = cvs.getBoundingClientRect();
+    const t = e.touches[0];
+    const mx = (t.clientX - rect.left) * (cvs.width / rect.width);
+    const my = (t.clientY - rect.top) * (cvs.height / rect.height);
+    if (mx < lensX() - 5) { srcX = mx; srcY = my; }
+  }, { passive: false });
+  cvs.addEventListener('click', () => { showAllRays = !showAllRays; });
+
+  UI.bindRange('range-rays', 'val-rays', v => { rayCount = Math.round(v); });
+  UI.bindRange('range-focal', 'val-focal', v => { focalPercent = v; });
+  UI.bindCheckbox('cb-construction', v => { showConstruction = v; });
+  UI.bindCheckbox('cb-allrays', v => { showAllRays = v; });
+  UI.initModeButtons('#modeSwitcher', { setMode: m => {
+    document.body.classList.remove('teacher-mode', 'sheet-mode');
+    if (m === 'teacher') document.body.classList.add('teacher-mode');
+    if (m === 'sheet') document.body.classList.add('sheet-mode');
+  }});
+  document.getElementById('btnFullscreen').addEventListener('click', () => UI.toggleFullscreen(document.documentElement));
+
+  requestAnimationFrame(function loop() { draw(); requestAnimationFrame(loop); });
+</script>
+</body>
+</html>

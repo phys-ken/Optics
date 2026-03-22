@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>幾何光学シミュレーター — Optics Lab</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    /* Landing page specific */
+    .section { padding: var(--space-8) 0; }
+    .section + .section { border-top: 1px solid var(--color-border); }
+
+    .preview-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Category color accents */
+    .card[data-cat="lens"] .card__category { color: #2d7dd2; }
+    .card[data-cat="mirror"] .card__category { color: #0f9d58; }
+    .card[data-cat="shadow"] .card__category { color: #e67e22; }
+    .card[data-cat="eye"] .card__category { color: #7c3aed; }
+    .card[data-cat="3d"] .card__category { color: #e74c3c; }
+    .card[data-cat="practice"] .card__category { color: #64748b; }
+
+    .card[data-cat="lens"]:hover { border-color: #2d7dd2; }
+    .card[data-cat="mirror"]:hover { border-color: #0f9d58; }
+    .card[data-cat="shadow"]:hover { border-color: #e67e22; }
+    .card[data-cat="eye"]:hover { border-color: #7c3aed; }
+    .card[data-cat="3d"]:hover { border-color: #e74c3c; }
+    .card[data-cat="practice"]:hover { border-color: #64748b; }
+
+    .card[data-cat="lens"] .card__preview { background: linear-gradient(135deg, #0f172a, #1e3a5f); }
+    .card[data-cat="mirror"] .card__preview { background: linear-gradient(135deg, #0f1f0f, #1a3d2e); }
+    .card[data-cat="shadow"] .card__preview { background: linear-gradient(135deg, #1a1a0f, #3d300a); }
+    .card[data-cat="eye"] .card__preview { background: linear-gradient(135deg, #1a0f2e, #3d1a5f); }
+    .card[data-cat="3d"] .card__preview { background: linear-gradient(135deg, #1a0f0f, #3d1a1a); }
+    .card[data-cat="practice"] .card__preview { background: linear-gradient(135deg, #1a1a1a, #2a2a2e); }
+
+    .hero-visual {
+      display: flex;
+      justify-content: center;
+      margin-bottom: var(--space-8);
+    }
+
+    .hero-visual canvas {
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-10);
+      padding: var(--space-6) 0;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat__num {
+      font-size: var(--font-size-2xl);
+      font-weight: 800;
+      color: var(--color-text);
+      display: block;
+    }
+
+    .stat__label {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+    }
+
+    .how-it-works {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-6);
+      margin-top: var(--space-6);
+    }
+
+    .how-step {
+      text-align: center;
+      padding: var(--space-5);
+    }
+
+    .how-step__icon {
+      font-size: 2.5rem;
+      margin-bottom: var(--space-3);
+      display: block;
+    }
+
+    .how-step__title {
+      font-weight: 700;
+      margin-bottom: var(--space-2);
+    }
+
+    .how-step__desc {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-muted);
+    }
+
+    .new-badge {
+      display: inline-flex;
+      align-items: center;
+      background: #e74c3c;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 100px;
+      margin-left: 6px;
+      vertical-align: middle;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Site Header -->
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="index.html" class="site-logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 2v4M12 18v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M2 12h4M18 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+      </svg>
+      Optics Lab
+    </a>
+    <nav class="site-nav">
+      <a href="sims/lens.html" class="nav-link">レンズ</a>
+      <a href="sims/mirror.html" class="nav-link">鏡</a>
+      <a href="sims/concave.html" class="nav-link">凹面鏡</a>
+      <a href="sims/slits.html" class="nav-link">光線モデル</a>
+      <a href="sims/eye.html" class="nav-link">目のしくみ</a>
+      <a href="sims/3d.html" class="nav-link">3Dモデル <span class="new-badge">NEW</span></a>
+      <a href="sims/practice.html" class="nav-link">練習問題</a>
+    </nav>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+    <div class="hero__badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      </svg>
+      幾何光学シミュレーター
+    </div>
+    <h1 class="hero__title">
+      光の動きを<span>視覚的に</span>理解する
+    </h1>
+    <p class="hero__subtitle">
+      レンズ・鏡・光線の振る舞いをインタラクティブなシミュレーションで学ぼう。<br>
+      授業提示・自習・作図練習のすべてに対応。
+    </p>
+
+    <div style="display:flex;gap:var(--space-3);justify-content:center;">
+      <a href="sims/lens.html" class="btn btn--primary btn--lg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/>
+        </svg>
+        シミュレーション開始
+      </a>
+      <a href="sims/3d.html" class="btn btn--secondary btn--lg">
+        3D光線モデルを試す
+      </a>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <span class="stat__num">8</span>
+        <span class="stat__label">シミュレーション</span>
+      </div>
+      <div class="stat">
+        <span class="stat__num">3</span>
+        <span class="stat__label">モード対応</span>
+      </div>
+      <div class="stat">
+        <span class="stat__num">3D</span>
+        <span class="stat__label">空間認識対応</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">3つの使用シーン</h2>
+    </div>
+    <div class="how-it-works">
+      <div class="how-step">
+        <span class="how-step__icon">🖥️</span>
+        <h3 class="how-step__title">授業提示モード</h3>
+        <p class="how-step__desc">
+          コントロールパネルを非表示にし、シミュレーションを全画面で提示。先生がリアルタイムで動かして説明できます。
+        </p>
+      </div>
+      <div class="how-step">
+        <span class="how-step__icon">📱</span>
+        <h3 class="how-step__title">生徒自習モード</h3>
+        <p class="how-step__desc">
+          パラメーター調整パネル・数値情報・解説を表示。生徒自身が試行錯誤しながら光の法則を発見できます。
+        </p>
+      </div>
+      <div class="how-step">
+        <span class="how-step__icon">📋</span>
+        <h3 class="how-step__title">作図練習モード</h3>
+        <p class="how-step__desc">
+          光線を非表示にして物体・レンズ・鏡だけを表示。試験問題や授業プリントに使える図を素早く作成できます。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Lens Simulations -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">🔵 レンズ</h2>
+      <span class="section-desc">凸レンズによる像の形成を学ぶ</span>
+    </div>
+    <div class="card-grid">
+      <a href="sims/lens.html" class="card" data-cat="lens">
+        <div class="card__preview">
+          <canvas id="prev-lens1" class="preview-canvas"></canvas>
+        </div>
+        <div class="card__body">
+          <div class="card__category">レンズ</div>
+          <h3 class="card__title">点光源とレンズ</h3>
+          <p class="card__desc">点光源を自由に動かし、凸レンズによる屈折と実像・虚像の形成を観察する基本シミュレーション。</p>
+        </div>
+        <div class="card__footer">
+          <span class="card__tag">点光源</span>
+          <span class="card__tag">実像/虚像</span>
+          <span class="card__tag">作図線</span>
+        </div>
+      </a>
+
+      <a href="sims/lens-object.html" class="card" data-cat="lens">
+        <div class="card__preview">
+          <canvas id="prev-lens2" class="preview-canvas"></canvas>
+        </div>
+        <div class="card__body">
+          <div class="card__category">レンズ</div>
+          <h3 class="card__title">大きさのある物体の像</h3>
+          <p class="card__desc">矢印形の物体がレンズに対してどのように結像するか、倒立・正立・拡大・縮小の関係を可視化。</p>
+        </div>
+        <div class="card__footer">
+          <span class="card__tag">物体矢印</span>
+          <span class="card__tag">倒立/正立</span>
+          <span class="card__tag">倍率</span>
+        </div>
+      </a>
+
+      <a href="sims/lens-wide.html" class="card" data-cat="lens">
+        <div class="card__preview">🔭</div>
+        <div class="card__body">
+          <div class="card__category">レンズ</div>
+          <h3 class="card__title">レンズ径と明るさ</h3>
+          <p class="card__desc">レンズの有効径を変えることで、集める光の量（明るさ）がどう変わるかをシミュレート。</p>
+        </div>
+        <div class="card__footer">
+          <span class="card__tag">有効径</span>
+          <span class="card__tag">明るさ</span>
+        </div>
+      </a>
+
+      <a href="sims/eye.html" class="card" data-cat="eye">
+        <div class="card__preview">👁️</div>
+        <div class="card__body">
+          <div class="card__category">目のしくみ</div>
+          <h3 class="card__title">目の調節とレンズ</h3>
+          <p class="card__desc">水晶体の焦点距離を変えることで、遠くや近くの物体が網膜に結像する仕組みを学ぶ。</p>
+        </div>
+        <div class="card__footer">
+          <span class="card__tag">水晶体</span>
+          <span class="card__tag">網膜</span>
+          <span class="card__tag">調節</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Mirror Simulations -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">🟢 鏡</h2>
+      <span class="section-desc">反射の法則と像の形成を学ぶ</span>
+    </div>
+    <div class="card-grid">
+      <a href="sims/mirror.html" class="card" data-cat="mirror">
+        <div class="card__preview">
+          <canvas id="prev-mirror" class="preview-canvas"></canvas>
+        </div>
+        <div class="card__body">
+          <div class="card__category">平面鏡</div>
+          <h3 class="card__title">平面鏡の反射</h3>
+          <p class="card__desc">点光源が平面鏡に当たって反射する様子と、鏡の裏側に見える虚像の位置を確認。</p>
+        </div>
+        <div class="card__footer">
+          <span class="card__tag">反射の法則</span>
+          <span class="card__tag">虚像</span>
+          <span class="card__tag">作図線</span>
+        </div>
+      </a>
+
+      <a href="sims/concave.html" class="card" data-cat="mirror">
+        <div class="card__preview">
+          <canvas id="prev-concave" class="preview-canvas"></canvas>
+        </div>
+        <div class="card__body">
+          <div class="card__category">凹面鏡</div>
+          <h3 class="card__title">凹面鏡の結像</h3>
+          <p class="card__desc">球面反射鏡（凹面鏡）による光線の集光と像の形成。レンズとの対比でも学べる。</p>
+        </div>
+        <div class="card__footer">
+          <span class="card__tag">球面鏡</span>
+          <span class="card__tag">焦点</span>
+          <span class="card__tag">実像</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Shadow / Ray model -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">🟠 光線モデル・影</h2>
+      <span class="section-desc">スリットを通る光の振る舞いと影の形成</span>
+    </div>
+    <div class="card-grid">
+      <a href="sims/slits.html?mode=1" class="card" data-cat="shadow">
+        <div class="card__preview">💡</div>
+        <div class="card__body">
+          <div class="card__category">光線モデル</div>
+          <h3 class="card__title">1スリットの光線モデル</h3>
+          <p class="card__desc">点光源からの光がスリット（穴）を通り抜けてスクリーンに映るパターンを観察。</p>
+        </div>
+        <div class="card__footer">
+          <span class="card__tag">点光源</span>
+          <span class="card__tag">スリット</span>
+          <span class="card__tag">影</span>
+        </div>
+      </a>
+
+      <a href="sims/slits.html?mode=2" class="card" data-cat="shadow">
+        <div class="card__preview">💡💡</div>
+        <div class="card__body">
+          <div class="card__category">光線モデル</div>
+          <h3 class="card__title">2光源の光線モデル</h3>
+          <p class="card__desc">2つの光源からの光が重なって影・半影・明部を作る様子を学ぶ。</p>
+        </div>
+        <div class="card__footer">
+          <span class="card__tag">2光源</span>
+          <span class="card__tag">半影</span>
+          <span class="card__tag">重ね合わせ</span>
+        </div>
+      </a>
+
+      <a href="sims/3d.html" class="card" data-cat="3d">
+        <div class="card__preview" style="background: linear-gradient(135deg, #0f0a1e, #1a0f3d);">
+          <span style="font-size:3rem;">🌐</span>
+        </div>
+        <div class="card__body">
+          <div class="card__category">3D光線モデル <span class="new-badge">NEW</span></div>
+          <h3 class="card__title">3D空間の光線と影</h3>
+          <p class="card__desc">
+            光源・遮蔽物・スクリーンの3D配置から影の形成を立体的に理解。
+            光線の「錐状広がり」を直感的に把握できる。
+          </p>
+        </div>
+        <div class="card__footer">
+          <span class="card__tag">3D</span>
+          <span class="card__tag">立体</span>
+          <span class="card__tag">影錐</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Practice -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">📝 練習問題</h2>
+      <span class="section-desc">プリント・試験問題の作成補助</span>
+    </div>
+    <div class="card-grid card-grid--2col">
+      <a href="sims/practice.html" class="card" data-cat="practice">
+        <div class="card__preview" style="font-size:2rem; display:flex; align-items:center; justify-content:center; gap: 12px;">
+          📐 📊
+        </div>
+        <div class="card__body">
+          <div class="card__category">練習問題ジェネレーター</div>
+          <h3 class="card__title">作図問題・数値計算問題を生成</h3>
+          <p class="card__desc">
+            レンズや鏡のパラメーターを設定して、作図練習・穴埋め計算問題を自動生成。
+            印刷用PDFをブラウザから出力できます。
+          </p>
+        </div>
+        <div class="card__footer">
+          <span class="card__tag">問題生成</span>
+          <span class="card__tag">印刷対応</span>
+          <span class="card__tag">PDF出力</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="container">
+    <p>Optics Lab — 幾何光学シミュレーター</p>
+    <p class="mt-4" style="font-size:var(--font-size-xs);">
+      phys-ken 作成 | 
+      <a href="https://github.com/phys-ken/Optics" target="_blank" rel="noopener">GitHub</a>
+    </p>
+  </div>
+</footer>
+
+<script src="js/optics.js"></script>
+<script>
+  // ミニプレビューcanvasを描画
+  function drawMiniPreview(canvasId, type) {
+    const cvs = document.getElementById(canvasId);
+    if (!cvs) return;
+    const parent = cvs.parentElement;
+    cvs.width = parent.clientWidth;
+    cvs.height = parent.clientHeight;
+    const oc = new OpticsCanvas(cvs);
+    const w = oc.width, h = oc.height;
+
+    oc.drawBackground();
+    oc.drawGrid(30, 'rgba(255,255,255,0.03)');
+    oc.drawAxis();
+
+    if (type === 'lens1') {
+      oc.drawConvexLens(w * 0.5, h, h * 0.7);
+      oc.drawFocusPoint(w * 0.5 + w * 0.18, h / 2, '#fbbf24', 'F');
+      oc.drawFocusPoint(w * 0.5 - w * 0.18, h / 2, '#fbbf24', 'F');
+      oc.drawPointSource(w * 0.2, h * 0.35);
+      // 代表光線
+      oc.drawRay(w*0.2, h*0.35, w*0.5, h*0.35, '#ffd700aa', 1);
+      oc.drawRay(w*0.5, h*0.35, w*0.8, h*0.65, '#ffd700aa', 1);
+    } else if (type === 'lens2') {
+      oc.drawConvexLens(w * 0.5, h, h * 0.7);
+      oc.drawObjectArrow(w * 0.25, h * 0.25, h * 0.75, '#ffd700', 5);
+      oc.drawImageArrow(w * 0.78, h * 0.6, h * 0.4, 'rgba(100,200,255,0.7)', 4);
+    } else if (type === 'mirror') {
+      oc.drawPlainMirror(w * 0.7, h);
+      oc.drawPointSource(w * 0.3, h * 0.35);
+      oc.drawRay(w*0.3, h*0.35, w*0.7, h*0.2, '#ffd700aa', 1);
+      oc.drawRay(w*0.7, h*0.2, w*0.45, h*0.5, '#ffd700aa', 1);
+    } else if (type === 'concave') {
+      oc.drawConcaveMirror(w * 0.82, h, w * 0.15);
+      oc.drawFocusPoint(w * 0.82 - w * 0.15, h/2, '#fbbf24', 'F');
+      oc.drawPointSource(w * 0.3, h * 0.35);
+    }
+  }
+
+  window.addEventListener('load', () => {
+    drawMiniPreview('prev-lens1', 'lens1');
+    drawMiniPreview('prev-lens2', 'lens2');
+    drawMiniPreview('prev-mirror', 'mirror');
+    drawMiniPreview('prev-concave', 'concave');
+  });
+</script>
+</body>
+</html>

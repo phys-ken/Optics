@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大きさのある物体の像 — Optics Lab</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    html, body { height: 100%; overflow: hidden; }
+    .sim-canvas-wrap { height: calc(100vh - 50px - 52px); }
+    @media (max-width: 768px) {
+      html, body { overflow: auto; }
+      .sim-canvas-wrap { height: 55vw; min-height: 220px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="../index.html" class="site-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 2v4M12 18v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M2 12h4M18 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+      </svg>
+      Optics Lab
+    </a>
+    <nav class="site-nav">
+      <a href="lens.html" class="nav-link">点光源</a>
+      <a href="lens-object.html" class="nav-link active">物体の像</a>
+      <a href="mirror.html" class="nav-link">平面鏡</a>
+      <a href="concave.html" class="nav-link">凹面鏡</a>
+      <a href="slits.html" class="nav-link">光線モデル</a>
+    </nav>
+  </div>
+</header>
+
+<div class="sim-page">
+  <div class="sim-toolbar">
+    <div>
+      <span style="font-weight:700;">大きさのある物体の像</span>
+      <span style="font-size:var(--font-size-xs); color:var(--color-text-muted); margin-left:var(--space-3);">矢印物体をドラッグして像の変化を観察</span>
+    </div>
+    <div class="mode-switcher" id="modeSwitcher" style="margin-left:auto;">
+      <button class="mode-btn active" data-mode="student">自習</button>
+      <button class="mode-btn" data-mode="teacher">授業</button>
+      <button class="mode-btn" data-mode="sheet">作図</button>
+    </div>
+    <button id="btnFullscreen" class="btn btn--ghost btn--sm">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="sim-body" id="simBody">
+    <aside class="sim-sidebar" id="simSidebar">
+      <div>
+        <div class="control-label">コントロール</div>
+        <div style="margin-top:var(--space-3); display:flex; flex-direction:column; gap:var(--space-4);">
+          <div class="control-group">
+            <div class="control-row">
+              <span class="control-label">光線の本数</span>
+              <span class="range-value" id="val-rays">20</span>
+            </div>
+            <input type="range" id="range-rays" min="2" max="60" value="10" step="2">
+          </div>
+          <div class="control-group">
+            <div class="control-row">
+              <span class="control-label">焦点距離 (相対)</span>
+              <span class="range-value" id="val-focal">17</span>
+            </div>
+            <input type="range" id="range-focal" min="8" max="30" value="17" step="1">
+          </div>
+          <label class="checkbox-label">
+            <input type="checkbox" id="cb-construction">
+            3本の代表光線を表示
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="cb-allrays" checked>
+            全光線を表示
+          </label>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="info-panel">
+        <div class="info-panel__title">物理量</div>
+        <div class="info-row">
+          <span class="info-row__label">物体距離 a</span>
+          <span class="info-row__value" id="info-a">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-row__label">像距離 b</span>
+          <span class="info-row__value" id="info-b">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-row__label">倍率 m</span>
+          <span class="info-row__value" id="info-m">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-row__label">像の種類</span>
+          <span class="info-row__value" id="info-type" style="font-family:var(--font-body); font-size:11px;">—</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="formula-box">
+        <div class="control-label" style="margin-bottom:6px;">レンズの公式</div>
+        <p>1/f = 1/a + 1/b</p>
+        <p>m = −b/a</p>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:var(--font-size-xs); color:var(--color-text-muted); line-height:1.7;">
+        <strong>操作方法</strong><br>
+        • マウス移動: 物体（矢印の先端）を動かす<br>
+        • クリック: 全光線 / 代表線 切替<br>
+        • 矢印の根本は常に光軸上
+      </div>
+    </aside>
+
+    <div class="sim-canvas-wrap">
+      <canvas id="simCanvas"></canvas>
+      <div class="canvas-hint">マウスで物体を動かす | クリックで光線切替</div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/optics.js"></script>
+<script>
+  const cvs = document.getElementById('simCanvas');
+  const oc = new OpticsCanvas(cvs);
+
+  let objX, objTipY;
+  let showAllRays = true;
+  let showConstruction = false;
+  let focalRatio = 17;
+  let rayCount = 10;
+
+  function initPositions() {
+    const w = oc.width, h = oc.height;
+    objX = w * 0.25;
+    objTipY = h * 0.3;
+  }
+  oc.onResize = () => initPositions();
+  initPositions();
+
+  function lensX() { return oc.width * 0.5; }
+  function focalLen() { return oc.width / focalRatio; }
+
+  function drawRaysFromPoint(srcX, srcY, color, alpha) {
+    const w = oc.width, h = oc.height;
+    const lx = lensX();
+    const f = focalLen();
+    const a = lx - srcX;
+    const b = Optics.lensEquation(a, f);
+    const m = Optics.magnification(a, b);
+    const imgX = lx + b;
+    const srcOff = srcY - h / 2;
+    const imgY = h / 2 - m * srcOff;
+
+    const aperture = h * 0.42;
+    const numRays = showAllRays ? rayCount * 2 : 3;
+
+    for (let i = 0; i <= numRays; i++) {
+      const t = numRays === 0 ? 0 : (i / numRays) - 0.5;
+      const hitY = h / 2 + aperture * t;
+      if (Math.abs(hitY - h / 2) > aperture / 2 + 1) continue;
+
+      oc.drawRay(srcX, srcY, lx, hitY, color, showAllRays ? 1 : 2, alpha * (showAllRays ? 0.45 : 1));
+
+      if (isFinite(imgX)) {
+        const dx = imgX - lx, dy = imgY - hitY;
+        const end = { x: w * 1.5, y: hitY + dy * (w * 1.5 - lx) / dx };
+        oc.drawRay(lx, hitY, end.x, end.y, color, showAllRays ? 1 : 2, alpha * (showAllRays ? 0.45 : 1));
+      } else {
+        oc.drawRay(lx, hitY, w * 1.5, hitY, color, 1, alpha * 0.4);
+      }
+    }
+    return { b, imgX, imgY, m };
+  }
+
+  function draw() {
+    const w = oc.width, h = oc.height;
+    if (w <= 0 || h <= 0) return;
+
+    oc.drawBackground();
+    oc.drawGrid(Math.floor(w / 20), 'rgba(255,255,255,0.025)');
+    oc.drawAxis();
+
+    const lx = lensX();
+    const f = focalLen();
+
+    oc.drawFocusPoint(lx + f, h / 2, '#fbbf24', 'F');
+    oc.drawFocusPoint(lx - f, h / 2, '#fbbf24', 'F');
+
+    // Object base is on axis
+    const objBaseY = h / 2;
+
+    // Draw rays from tip (objX, objTipY)
+    const tipResult = drawRaysFromPoint(objX, objTipY, '#ffd700', 1);
+    // Draw rays from base (objX, objBaseY)
+    const baseResult = drawRaysFromPoint(objX, objBaseY, '#74c69d', 0.7);
+
+    // Draw image
+    if (isFinite(tipResult.imgX) && tipResult.imgX > 0 && tipResult.imgX < w * 1.5) {
+      // Image arrow from base image to tip image
+      oc.drawImageArrow(tipResult.imgX, tipResult.imgY, baseResult.imgY, 'rgba(100,200,255,0.85)', 6);
+      oc.drawLabel(tipResult.imgX + 12, tipResult.imgY, '像', 'rgba(100,200,255,0.9)', 11);
+    }
+
+    // Object arrow
+    oc.drawObjectArrow(objX, objTipY, objBaseY, '#ffd700', 7);
+    oc.drawLabel(objX + 12, objTipY, '物体', 'rgba(255,215,0,0.8)', 11);
+
+    // Label: axes
+    oc.drawLabel(objX, objBaseY + 16, '●', 'rgba(100,220,100,0.7)', 10);
+
+    // Lens
+    oc.drawConvexLens(lx, h, h * 0.8);
+    oc.drawLabel(lx, 20, 'レンズ  f = ' + f.toFixed(0), 'rgba(96,165,250,0.8)', 11);
+
+    // Info
+    const a = lx - objX;
+    const b = tipResult.b;
+    const m = tipResult.m;
+    const imgType = isFinite(b) ? Optics.imageType(m) : null;
+    UI.updateInfo({
+      a: a.toFixed(0),
+      b: isFinite(b) ? b.toFixed(0) : Infinity,
+      m: isFinite(m) ? m.toFixed(2) : Infinity,
+    });
+    const typeEl = document.getElementById('info-type');
+    if (typeEl && imgType) typeEl.textContent = `${imgType.label} · ${imgType.orientation}`;
+  }
+
+  cvs.addEventListener('mousemove', e => {
+    const rect = cvs.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (cvs.width / rect.width);
+    const my = (e.clientY - rect.top) * (cvs.height / rect.height);
+    if (mx < lensX() - 5) {
+      objX = mx;
+      objTipY = my;
+    }
+  });
+
+  cvs.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const rect = cvs.getBoundingClientRect();
+    const t = e.touches[0];
+    const mx = (t.clientX - rect.left) * (cvs.width / rect.width);
+    const my = (t.clientY - rect.top) * (cvs.height / rect.height);
+    if (mx < lensX() - 5) { objX = mx; objTipY = my; }
+  }, { passive: false });
+
+  cvs.addEventListener('click', () => { showAllRays = !showAllRays; });
+
+  UI.bindRange('range-rays', 'val-rays', v => { rayCount = Math.round(v); });
+  UI.bindRange('range-focal', 'val-focal', v => { focalRatio = v; });
+  UI.bindCheckbox('cb-construction', v => { showConstruction = v; });
+  UI.bindCheckbox('cb-allrays', v => { showAllRays = v; });
+
+  UI.initModeButtons('#modeSwitcher', { setMode: m => {
+    document.body.classList.remove('teacher-mode', 'sheet-mode');
+    if (m === 'teacher') document.body.classList.add('teacher-mode');
+    if (m === 'sheet') document.body.classList.add('sheet-mode');
+  }});
+  document.getElementById('btnFullscreen').addEventListener('click', () => UI.toggleFullscreen(document.documentElement));
+
+  requestAnimationFrame(function loop() { draw(); requestAnimationFrame(loop); });
+</script>
+</body>
+</html>

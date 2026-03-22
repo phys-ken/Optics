@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>練習問題ジェネレーター — Optics Lab</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .gen-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: var(--space-6);
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: var(--space-6) var(--space-4);
+    }
+
+    @media (max-width: 768px) {
+      .gen-layout { grid-template-columns: 1fr; }
+    }
+
+    .problem-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .problem-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      page-break-inside: avoid;
+    }
+
+    .problem-card__num {
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      color: var(--color-accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: var(--space-3);
+    }
+
+    .problem-card__q {
+      font-size: var(--font-size-base);
+      line-height: 1.8;
+      margin-bottom: var(--space-4);
+    }
+
+    .problem-card__params {
+      display: flex;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+      padding: var(--space-3);
+      background: var(--color-bg);
+      border-radius: var(--radius);
+      margin-bottom: var(--space-4);
+      font-size: var(--font-size-sm);
+    }
+
+    .problem-card__param {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .problem-card__param-label { color: var(--color-text-muted); }
+    .problem-card__param-value { font-weight: 600; font-family: var(--font-mono); }
+
+    .problem-card__answer {
+      display: none;
+      margin-top: var(--space-4);
+      padding: var(--space-4);
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: var(--radius);
+      font-size: var(--font-size-sm);
+      line-height: 2;
+    }
+
+    .problem-card__answer.visible { display: block; }
+
+    .problem-canvas {
+      display: block;
+      border-radius: var(--radius);
+      background: #1a1a2e;
+      margin-bottom: var(--space-3);
+      width: 100%;
+      height: 140px;
+    }
+
+    .answer-key { color: #16a34a; font-weight: 600; }
+    .answer-sep { color: var(--color-text-muted); margin: 0 var(--space-2); }
+
+    .gen-title {
+      font-size: var(--font-size-2xl);
+      font-weight: 700;
+      margin-bottom: var(--space-2);
+    }
+
+    .gen-subtitle {
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-6);
+    }
+
+    .btn--print {
+      background: #16a34a;
+      color: white;
+      border: none;
+    }
+    .btn--print:hover { background: #15803d; }
+
+    .answer-toggle-all {
+      font-size: var(--font-size-xs);
+      cursor: pointer;
+      color: var(--color-accent);
+      text-decoration: underline;
+      border: none;
+      background: none;
+      font-family: inherit;
+    }
+
+    .difficulty-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 100px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .diff-easy { background: #dcfce7; color: #16a34a; }
+    .diff-medium { background: #fef3c7; color: #d97706; }
+    .diff-hard { background: #fee2e2; color: #dc2626; }
+
+    @media print {
+      .gen-sidebar, .no-print { display: none !important; }
+      .gen-layout { grid-template-columns: 1fr; padding: 10mm; }
+      .problem-card { border: 1px solid #ccc; break-inside: avoid; }
+      .problem-card__answer { display: none !important; }
+      body { background: white; }
+      .site-header { display: none; }
+      .print-header { display: block !important; }
+    }
+
+    .print-header {
+      display: none;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .count-badge {
+      display: inline-block;
+      background: var(--color-accent-light);
+      color: var(--color-accent);
+      font-size: var(--font-size-xs);
+      font-weight: 700;
+      border-radius: 100px;
+      padding: 2px 10px;
+      margin-left: var(--space-2);
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="../index.html" class="site-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 2v4M12 18v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M2 12h4M18 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+      </svg>
+      Optics Lab
+    </a>
+    <nav class="site-nav">
+      <a href="../index.html" class="nav-link">← トップ</a>
+      <a href="lens.html" class="nav-link">レンズ</a>
+      <a href="practice.html" class="nav-link active">練習問題</a>
+    </nav>
+  </div>
+</header>
+
+<div class="print-header">
+  <h1 style="font-size:20pt;">光学　練習問題</h1>
+  <p id="printSubtitle"></p>
+  <p style="font-size:10pt;color:#888;">Optics Lab — Generated Problem Set</p>
+</div>
+
+<div class="gen-layout">
+  <!-- Sidebar -->
+  <aside class="gen-sidebar no-print">
+    <div class="control-label" style="margin-bottom:var(--space-4);">問題設定</div>
+
+    <div style="display:flex; flex-direction:column; gap:var(--space-4);">
+
+      <div class="control-group">
+        <div class="control-row">
+          <span class="control-label">問題タイプ</span>
+        </div>
+        <select id="sel-type" style="width:100%; margin-top:var(--space-2); padding:var(--space-2) var(--space-3); border-radius:var(--radius); border:1px solid var(--color-border); font-family:inherit; font-size:var(--font-size-sm); background:var(--color-surface);">
+          <option value="lens_ab">凸レンズ — 像の位置 (b を求める)</option>
+          <option value="lens_a">凸レンズ — 物体の位置 (a を求める)</option>
+          <option value="lens_f">凸レンズ — 焦点距離 (f を求める)</option>
+          <option value="mag">凸レンズ — 倍率と像の大きさ</option>
+          <option value="concave">凹面鏡 — 像の位置</option>
+          <option value="mirror">平面鏡 — 像の位置（定性）</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <div class="control-row">
+          <span class="control-label">難易度</span>
+        </div>
+        <div style="display:flex; gap:var(--space-2); margin-top:var(--space-2);" id="diffGroup">
+          <label style="display:flex;align-items:center;gap:4px;font-size:var(--font-size-xs);">
+            <input type="checkbox" name="diff" value="easy" checked> 基本
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:var(--font-size-xs);">
+            <input type="checkbox" name="diff" value="medium" checked> 標準
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:var(--font-size-xs);">
+            <input type="checkbox" name="diff" value="hard"> 応用
+          </label>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-row">
+          <span class="control-label">生成する問題数</span>
+          <span class="range-value" id="val-count">10</span>
+        </div>
+        <input type="range" id="range-count" min="3" max="30" value="10" step="1">
+      </div>
+
+      <label class="checkbox-label">
+        <input type="checkbox" id="cb-diagrams" checked>
+        作図（概略図）を含める
+      </label>
+
+      <label class="checkbox-label">
+        <input type="checkbox" id="cb-integers" checked>
+        整数値のみ
+      </label>
+
+      <div style="display:flex; flex-direction:column; gap:var(--space-2);">
+        <button class="btn btn--primary" onclick="generateProblems()" id="btnGenerate">
+          問題を生成
+        </button>
+        <button class="btn btn--print no-print" onclick="window.print()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2-2h-2M6 14h12v8H6z"/>
+          </svg>
+          PDFに印刷
+        </button>
+        <button class="answer-toggle-all no-print" onclick="toggleAllAnswers()">全問の解答を表示/非表示</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Problem List -->
+  <main>
+    <div class="print-header" id="printHeader2" style="display:none; margin-bottom:var(--space-6);">
+      <div style="font-size:var(--font-size-sm); color:var(--color-text-muted);">物理　光学　練習問題</div>
+    </div>
+    <div class="gen-title">練習問題
+      <span class="count-badge" id="countBadge" style="display:none;"></span>
+    </div>
+    <div class="gen-subtitle">問題タイプと数を選んで「問題を生成」を押してください。</div>
+    <div class="problem-list" id="problemList">
+      <!-- Generated problems inserted here -->
+    </div>
+  </main>
+</div>
+
+<script src="../js/optics.js"></script>
+<script>
+  /* ============================================================
+     Practice Problem Generator
+  ============================================================ */
+
+  UI.bindRange('range-count', 'val-count', () => {});
+
+  let allAnswersVisible = false;
+  function toggleAllAnswers() {
+    allAnswersVisible = !allAnswersVisible;
+    document.querySelectorAll('.problem-card__answer').forEach(el => {
+      el.classList.toggle('visible', allAnswersVisible);
+    });
+  }
+
+  function toggleAnswer(id) {
+    const el = document.getElementById('ans-' + id);
+    if (el) el.classList.toggle('visible');
+  }
+
+  /* ---- Number helpers ---- */
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function randInt(lo, hi) { return Math.floor(Math.random() * (hi - lo + 1)) + lo; }
+
+  /* ---- Lens problem generators ---- */
+  function genLensAB(difficulty, useIntegers) {
+    const fValues = {
+      easy:   [10, 15, 20],
+      medium: [10, 12, 15, 20, 25],
+      hard:   [8, 10, 12, 15, 16, 20, 24, 25, 30],
+    };
+    const f = pick(fValues[difficulty] || fValues.medium);
+    let a;
+    if (difficulty === 'easy') {
+      a = pick([2 * f, 3 * f, 4 * f]);
+    } else if (difficulty === 'medium') {
+      const multipliers = [1.5, 2, 3, 4, 5];
+      const m = pick(multipliers);
+      a = m * f;
+    } else {
+      a = randInt(f + 2, 5 * f);
+      if (useIntegers && (f * a) % (a - f) !== 0) {
+        // retry to get integer b
+        for (let i = 0; i < 50; i++) {
+          a = randInt(f + 2, 5 * f);
+          if ((f * a) % (a - f) === 0) break;
+        }
+      }
+    }
+
+    const b = Optics.lensEquation(a, f);
+    const m = Optics.magnification(a, b);
+    const info = Optics.imageType(m);
+
+    const bRounded = Math.round(b * 10) / 10;
+    const mRounded = Math.round(Math.abs(m) * 100) / 100;
+
+    return {
+      difficulty,
+      question: `焦点距離 ${f} cm の凸レンズから、物体を ${a} cm の位置に置いた。\n像はレンズから何 cm の位置にできるか。また、実像か虚像か答えよ。`,
+      params: { '焦点距離 f': `${f} cm`, '物体距離 a': `${a} cm` },
+      answer: `
+        <strong>像の位置：</strong><br>
+        レンズの式：1/f = 1/a + 1/b より<br>
+        1/b = 1/${f} − 1/${a} = ${(1/f).toFixed(4)} − ${(1/a).toFixed(4)}<br>
+        b = <span class="answer-key">${bRounded} cm</span><br><br>
+        <strong>像の種類：</strong> <span class="answer-key">${info.label}</span>（b > 0 のため実像）<br>
+        <strong>倍率：</strong> |m| = b/a = ${bRounded}/${a} ≈ <span class="answer-key">${mRounded}</span>
+      `,
+      draw: (canvas) => drawLensDiagram(canvas, f, a, b),
+    };
+  }
+
+  function genLensA(difficulty, useIntegers) {
+    const f = pick([10, 15, 20]);
+    let b;
+    if (difficulty === 'easy') b = pick([2*f, 3*f]);
+    else if (difficulty === 'medium') b = pick([1.5*f, 2*f, 3*f, 4*f]);
+    else b = randInt(f + 2, 4*f);
+
+    // a from lens equation: a = b*f / (b - f)
+    const a = (b * f) / (b - f);
+    const aRounded = Math.round(a * 10) / 10;
+
+    return {
+      difficulty,
+      question: `焦点距離 ${f} cm の凸レンズを使ったとき、レンズから ${b} cm の位置に実像ができた。\n物体はレンズから何 cm の位置にあるか。`,
+      params: { '焦点距離 f': `${f} cm`, '像の距離 b': `${b} cm` },
+      answer: `
+        レンズの式：1/f = 1/a + 1/b より<br>
+        1/a = 1/${f} − 1/${b}<br>
+        a = <span class="answer-key">${aRounded} cm</span>
+      `,
+      draw: (canvas) => drawLensDiagram(canvas, f, a, b),
+    };
+  }
+
+  function genLensF(difficulty) {
+    const f = pick([10, 12, 15, 20]);
+    const mult = pick([2, 3, 4]);
+    const a = mult * f;
+    const b = Optics.lensEquation(a, f);
+    const bRounded = Math.round(b * 10) / 10;
+
+    return {
+      difficulty,
+      question: `物体をレンズから ${a} cm 置いたとき、レンズから ${bRounded} cm の位置に像ができた。\nこのレンズの焦点距離を求めよ。`,
+      params: { '物体距離 a': `${a} cm`, '像の距離 b': `${bRounded} cm` },
+      answer: `
+        1/f = 1/a + 1/b = 1/${a} + 1/${bRounded}<br>
+        f = <span class="answer-key">${f} cm</span>
+      `,
+      draw: (canvas) => drawLensDiagram(canvas, f, a, b),
+    };
+  }
+
+  function genMag(difficulty) {
+    const f = pick([10, 15, 20]);
+    const a = pick([2*f, 3*f, 4*f]);
+    const b = Optics.lensEquation(a, f);
+    const m = Optics.magnification(a, b);
+    const objH = pick([2, 3, 4, 5]);
+    const imgH = Math.abs(m) * objH;
+    const imgHRounded = Math.round(imgH * 10) / 10;
+    const mRounded = Math.round(Math.abs(m) * 100) / 100;
+
+    return {
+      difficulty,
+      question: `焦点距離 ${f} cm の凸レンズを用い、物体をレンズから ${a} cm においた。\n(1) 倍率を求めよ。\n(2) 物体の高さが ${objH} cm のとき、像の高さを求めよ。`,
+      params: { '焦点距離 f': `${f} cm`, '物体距離 a': `${a} cm`, '物体の高さ': `${objH} cm` },
+      answer: `
+        <strong>(1) 倍率：</strong><br>
+        b = ${Math.round(b * 10) / 10} cm<br>
+        m = b/a = <span class="answer-key">${mRounded}</span><br><br>
+        <strong>(2) 像の高さ：</strong><br>
+        ${objH} × ${mRounded} = <span class="answer-key">${imgHRounded} cm</span>
+      `,
+      draw: (canvas) => drawLensDiagram(canvas, f, a, b),
+    };
+  }
+
+  function genConcave(difficulty) {
+    const f = pick([10, 15, 20]);
+    const a = pick([2*f, 3*f, 4*f]);
+    // Concave mirror: same formula as lens
+    const b = Optics.lensEquation(a, f);
+    const bRounded = Math.round(b * 10) / 10;
+
+    return {
+      difficulty,
+      question: `焦点距離 ${f} cm の凹面鏡から、物体を ${a} cm 前方においた。\n像は鏡の前方何 cm にできるか。`,
+      params: { '焦点距離 f': `${f} cm`, '物体距離 a': `${a} cm` },
+      answer: `
+        球面鏡の式：1/f = 1/a + 1/b<br>
+        b = <span class="answer-key">${bRounded} cm</span>（実像）
+      `,
+      draw: null,
+    };
+  }
+
+  function genMirror(difficulty) {
+    const dist = pick([30, 40, 50, 60, 80, 100]);
+    return {
+      difficulty,
+      question: `鏡の前方 ${dist} cm に物体がある。\n平面鏡によってできる像の位置を答えよ。また、実像か虚像かを答えよ。`,
+      params: { '物体の距離': `${dist} cm` },
+      answer: `
+        平面鏡の場合、像は鏡の後ろ（鏡面対称の位置）<br>
+        像の位置：<span class="answer-key">鏡の後方 ${dist} cm</span><br>
+        像の種類：<span class="answer-key">虚像</span>（正立等倍）
+      `,
+      draw: null,
+    };
+  }
+
+  /* ---- Canvas diagram drawing ---- */
+  function drawLensDiagram(canvas, f, a, b) {
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const CX = W * 0.5, CY = H * 0.5;
+    const OC = new OpticsCanvas(canvas);
+    OC.drawBackground();
+
+    const scale = Math.min(W / (Math.max(a, b) * 2 + 40), 3);
+    const lensX = CX;
+
+    // Axis
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(0, CY); ctx.lineTo(W, CY); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Lens
+    ctx.strokeStyle = '#60a5fa'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(lensX, CY - H * 0.4); ctx.lineTo(lensX, CY + H * 0.4); ctx.stroke();
+
+    // Object
+    const objX = lensX - a * scale;
+    if (objX > 0) {
+      ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(objX, CY); ctx.lineTo(objX, CY - 28); ctx.stroke();
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath(); ctx.moveTo(objX, CY - 28); ctx.lineTo(objX-5, CY-20); ctx.lineTo(objX+5, CY-20); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = '10px sans-serif'; ctx.fillText('物体', objX - 14, CY - 32);
+    }
+
+    // F marks
+    const f1X = lensX + f * scale, f2X = lensX - f * scale;
+    [f1X, f2X].forEach(fx => {
+      if (fx > 0 && fx < W) {
+        ctx.fillStyle = '#10b981';
+        ctx.beginPath(); ctx.arc(fx, CY, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.font = '10px sans-serif'; ctx.fillStyle = '#10b981';
+        ctx.fillText('F', fx - 4, CY + 18);
+      }
+    });
+
+    // Image
+    const imgX = lensX + b * scale;
+    const isReal = b > 0;
+    if (imgX > 0 && imgX < W) {
+      ctx.strokeStyle = isReal ? '#f43f5e' : '#a78bfa'; ctx.lineWidth = 1.5;
+      ctx.setLineDash(isReal ? [] : [4, 4]);
+      ctx.beginPath(); ctx.moveTo(imgX, CY); ctx.lineTo(imgX, CY - 22); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = isReal ? '#f43f5e' : '#a78bfa';
+      ctx.font = '10px sans-serif';
+      ctx.fillText(isReal ? '実像' : '虚像', imgX - 10, CY - 28);
+    }
+  }
+
+  /* ---- Generate problems ---- */
+  function generateProblems() {
+    const type = document.getElementById('sel-type').value;
+    const count = parseInt(document.getElementById('range-count').value);
+    const showDiagrams = document.getElementById('cb-diagrams').checked;
+    const useIntegers = document.getElementById('cb-integers').checked;
+    const difficulties = Array.from(document.querySelectorAll('input[name="diff"]:checked')).map(el => el.value);
+
+    if (!difficulties.length) { alert('難易度を1つ以上選択してください'); return; }
+
+    const generators = {
+      lens_ab: genLensAB,
+      lens_a:  genLensA,
+      lens_f:  genLensF,
+      mag:     genMag,
+      concave: genConcave,
+      mirror:  genMirror,
+    };
+    const gen = generators[type];
+    if (!gen) return;
+
+    const list = document.getElementById('problemList');
+    list.innerHTML = '';
+
+    const countBadge = document.getElementById('countBadge');
+    countBadge.textContent = `${count}問`;
+    countBadge.style.display = '';
+
+    for (let i = 0; i < count; i++) {
+      const diff = pick(difficulties);
+      let problem;
+      try {
+        problem = gen(diff, useIntegers);
+      } catch(e) {
+        console.warn('Problem generation error:', e);
+        continue;
+      }
+
+      const card = document.createElement('div');
+      card.className = 'problem-card';
+      const diffLabel = { easy: '基本', medium: '標準', hard: '応用' }[diff];
+      const diffClass = { easy: 'diff-easy', medium: 'diff-medium', hard: 'diff-hard' }[diff];
+      const qLines = problem.question.split('\n').join('<br>');
+
+      card.innerHTML = `
+        <div class="problem-card__num">
+          問題 ${i + 1}
+          <span class="difficulty-badge ${diffClass}" style="margin-left:8px;">${diffLabel}</span>
+        </div>
+        <div class="problem-card__q">${qLines}</div>
+        <div class="problem-card__params">
+          ${Object.entries(problem.params).map(([k,v]) => `
+            <div class="problem-card__param">
+              <span class="problem-card__param-label">${k}：</span>
+              <span class="problem-card__param-value">${v}</span>
+            </div>`).join('')}
+        </div>
+        ${showDiagrams && problem.draw ? `<canvas class="problem-canvas" id="pcanvas-${i}" width="400" height="140"></canvas>` : ''}
+        <div>
+          <button class="btn btn--ghost btn--sm no-print" onclick="toggleAnswer(${i})" style="font-size:var(--font-size-xs);">
+            解答を表示/非表示
+          </button>
+        </div>
+        <div class="problem-card__answer" id="ans-${i}">${problem.answer}</div>
+      `;
+      list.appendChild(card);
+
+      if (showDiagrams && problem.draw) {
+        setTimeout(() => {
+          const c = document.getElementById(`pcanvas-${i}`);
+          if (c) problem.draw(c);
+        }, 50);
+      }
+    }
+
+    document.getElementById('printSubtitle').textContent =
+      `問題タイプ：${document.getElementById('sel-type').selectedOptions[0].text} | ${count}問`;
+  }
+
+  // Generate on load
+  generateProblems();
+</script>
+</body>
+</html>

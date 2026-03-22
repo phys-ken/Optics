@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>凹面鏡の結像 — Optics Lab</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    html, body { height: 100%; overflow: hidden; }
+    .sim-canvas-wrap { height: calc(100vh - 50px - 52px); }
+    @media (max-width: 768px) {
+      html, body { overflow: auto; }
+      .sim-canvas-wrap { height: 55vw; min-height: 220px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="../index.html" class="site-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 2v4M12 18v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M2 12h4M18 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+      </svg>
+      Optics Lab
+    </a>
+    <nav class="site-nav">
+      <a href="lens.html" class="nav-link">レンズ</a>
+      <a href="mirror.html" class="nav-link">平面鏡</a>
+      <a href="concave.html" class="nav-link active">凹面鏡</a>
+      <a href="slits.html" class="nav-link">光線モデル</a>
+    </nav>
+  </div>
+</header>
+
+<div class="sim-page">
+  <div class="sim-toolbar">
+    <div>
+      <span style="font-weight:700;">凹面鏡の結像</span>
+    </div>
+    <div class="mode-switcher" id="modeSwitcher" style="margin-left:auto;">
+      <button class="mode-btn active" data-mode="student">自習</button>
+      <button class="mode-btn" data-mode="teacher">授業</button>
+      <button class="mode-btn" data-mode="sheet">作図</button>
+    </div>
+    <button id="btnFullscreen" class="btn btn--ghost btn--sm">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="sim-body" id="simBody">
+    <aside class="sim-sidebar" id="simSidebar">
+      <div>
+        <div class="control-label">コントロール</div>
+        <div style="margin-top:var(--space-3); display:flex; flex-direction:column; gap:var(--space-4);">
+          <div class="control-group">
+            <div class="control-row">
+              <span class="control-label">光線の本数</span>
+              <span class="range-value" id="val-rays">40</span>
+            </div>
+            <input type="range" id="range-rays" min="4" max="120" value="20" step="2">
+          </div>
+          <div class="control-group">
+            <div class="control-row">
+              <span class="control-label">焦点距離 (相対)</span>
+              <span class="range-value" id="val-focal">6</span>
+            </div>
+            <input type="range" id="range-focal" min="4" max="12" value="6" step="1">
+          </div>
+          <label class="checkbox-label">
+            <input type="checkbox" id="cb-construction">
+            作図線を表示
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="cb-allrays" checked>
+            全光線を表示
+          </label>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="info-panel">
+        <div class="info-panel__title">物理量</div>
+        <div class="info-row">
+          <span class="info-row__label">物体距離 a</span>
+          <span class="info-row__value" id="info-a">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-row__label">像距離 b</span>
+          <span class="info-row__value" id="info-b">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-row__label">焦点距離 f</span>
+          <span class="info-row__value" id="info-f">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-row__label">倍率 m</span>
+          <span class="info-row__value" id="info-m">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-row__label">像の種類</span>
+          <span class="info-row__value" id="info-type" style="font-family:var(--font-body); font-size:11px;">—</span>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="formula-box">
+        <div class="control-label" style="margin-bottom:6px;">球面鏡の公式</div>
+        <p>1/f = 1/a + 1/b</p>
+        <p>f = R/2  (R: 曲率半径)</p>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:var(--font-size-xs); color:var(--color-text-muted); line-height:1.7;">
+        <strong>操作方法</strong><br>
+        • マウス: 光源を動かす<br>
+        • クリック: 全/代表光線切替<br>
+        凹面鏡は左側に光が集まります
+      </div>
+    </aside>
+
+    <div class="sim-canvas-wrap">
+      <canvas id="simCanvas"></canvas>
+      <div class="canvas-hint">マウスで光源を動かす | クリックで光線切替</div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/optics.js"></script>
+<script>
+  const cvs = document.getElementById('simCanvas');
+  const oc = new OpticsCanvas(cvs);
+
+  let srcX, srcY;
+  let showAllRays = true;
+  let showConstruction = false;
+  let focalRatio = 6;
+  let rayCount = 20;
+
+  function initPositions() {
+    const w = oc.width, h = oc.height;
+    srcX = w * 0.25;
+    srcY = h * 0.35;
+  }
+  oc.onResize = () => initPositions();
+  initPositions();
+
+  function mirrorX() { return oc.width * 0.82; }
+  function focalLen() { return oc.width / focalRatio; }
+
+  function draw() {
+    const w = oc.width, h = oc.height;
+    if (w <= 0 || h <= 0) return;
+
+    oc.drawBackground('#1a1a2e');
+    oc.drawGrid(Math.floor(w / 20), 'rgba(255,255,255,0.03)');
+    oc.drawAxis();
+
+    const mx = mirrorX();
+    const f = focalLen();
+    const R = 2 * f;
+
+    // Image position (same as lens formula, but image is on same side)
+    const a = mx - srcX;
+    const b = Optics.mirrorEquation(a, f);
+    const m = Optics.magnification(a, b);
+    const imgX = mx - b; // image is on same side as object
+    const srcOff = srcY - h / 2;
+    const imgY = h / 2 - m * srcOff;
+
+    // Focal point
+    oc.drawFocusPoint(mx - f, h / 2, '#fbbf24', 'F');
+    oc.drawLabel(mx - R, h / 2 + 18, 'C', 'rgba(251,191,36,0.7)', 11); // center of curvature
+
+    // Draw reflected rays
+    const mirrorH = h * 0.6;
+    const top = (h - mirrorH) / 2;
+    const bot = (h + mirrorH) / 2;
+    const numRays = showAllRays ? rayCount * 2 : 5;
+
+    for (let i = 0; i <= numRays; i++) {
+      const t = numRays === 0 ? 0 : (i / numRays) - 0.5;
+      const hitY = h / 2 + mirrorH * 0.45 * t;
+      if (hitY < top || hitY > bot) continue;
+
+      // Mirror surface x at this y (parabola)
+      const dy = hitY - h / 2;
+      const hitX = mx - dy * dy / (2 * R);
+
+      // Incident ray: source to mirror hit
+      oc.drawRay(srcX, srcY, hitX, hitY, '#ffd700', showAllRays ? 1 : 2, showAllRays ? 0.5 : 1);
+
+      // Reflected ray: using mirror equation
+      if (isFinite(imgX)) {
+        const rdx = imgX - hitX;
+        const rdy = imgY - hitY;
+        const L = Math.sqrt(rdx * rdx + rdy * rdy);
+        const extend = w * 2;
+        oc.drawRay(hitX, hitY, hitX + rdx * extend / L, hitY + rdy * extend / L,
+          '#ffd700', showAllRays ? 1 : 2, showAllRays ? 0.5 : 1);
+      }
+    }
+
+    // Image
+    if (isFinite(imgX) && imgX > 0 && imgX < mx) {
+      if (b > 0) {
+        oc.drawPointSource(imgX, imgY, 8, 'rgba(100,200,255,0.8)');
+        oc.drawLabel(imgX, imgY - 15, '像', 'rgba(100,200,255,0.9)', 11);
+      } else {
+        const ctx = oc.ctx;
+        ctx.beginPath();
+        ctx.arc(imgX, imgY, 8, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(100,200,255,0.6)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        oc.drawLabel(imgX, imgY - 15, '虚像', 'rgba(100,200,255,0.7)', 11);
+      }
+    }
+
+    // Mirror
+    oc.drawConcaveMirror(mx, h, f, '#94a3b8');
+    oc.drawLabel(mx + 16, 22, '凹面鏡', 'rgba(148,163,184,0.9)', 11);
+
+    // Source
+    oc.drawPointSource(srcX, srcY, 9, '#ffd700');
+    oc.drawLabel(srcX, srcY - 20, '光源', 'rgba(255,215,0,0.8)', 11);
+
+    // Info
+    UI.updateInfo({
+      a: a.toFixed(0),
+      b: isFinite(b) ? b.toFixed(0) : Infinity,
+      f: f.toFixed(0),
+      m: isFinite(m) ? m.toFixed(2) : Infinity,
+    });
+    const typeEl = document.getElementById('info-type');
+    if (typeEl && isFinite(b)) {
+      const t = Optics.imageType(m);
+      typeEl.textContent = `${t.label} · ${t.orientation}`;
+    }
+  }
+
+  cvs.addEventListener('mousemove', e => {
+    const rect = cvs.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (cvs.width / rect.width);
+    const my = (e.clientY - rect.top) * (cvs.height / rect.height);
+    if (mx < mirrorX() - 5) { srcX = mx; srcY = my; }
+  });
+  cvs.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const rect = cvs.getBoundingClientRect();
+    const t = e.touches[0];
+    const mx = (t.clientX - rect.left) * (cvs.width / rect.width);
+    const my = (t.clientY - rect.top) * (cvs.height / rect.height);
+    if (mx < mirrorX() - 5) { srcX = mx; srcY = my; }
+  }, { passive: false });
+  cvs.addEventListener('click', () => { showAllRays = !showAllRays; });
+
+  UI.bindRange('range-rays', 'val-rays', v => { rayCount = Math.round(v); });
+  UI.bindRange('range-focal', 'val-focal', v => { focalRatio = v; });
+  UI.bindCheckbox('cb-construction', v => { showConstruction = v; });
+  UI.bindCheckbox('cb-allrays', v => { showAllRays = v; });
+  UI.initModeButtons('#modeSwitcher', { setMode: m => {
+    document.body.classList.remove('teacher-mode', 'sheet-mode');
+    if (m === 'teacher') document.body.classList.add('teacher-mode');
+    if (m === 'sheet') document.body.classList.add('sheet-mode');
+  }});
+  document.getElementById('btnFullscreen').addEventListener('click', () => UI.toggleFullscreen(document.documentElement));
+
+  requestAnimationFrame(function loop() { draw(); requestAnimationFrame(loop); });
+</script>
+</body>
+</html>

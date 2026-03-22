@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D光線モデル — Optics Lab</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    html, body { height: 100%; overflow: hidden; background: #0a0a14; }
+
+    #canvas3d {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .sim-canvas-wrap {
+      position: relative;
+      flex: 1;
+      background: #0a0a14;
+      overflow: hidden;
+    }
+
+    .sim-canvas-wrap { height: calc(100vh - 50px - 52px); }
+
+    @media (max-width: 768px) {
+      html, body { overflow: auto; }
+      .sim-canvas-wrap { height: 60vw; min-height: 250px; }
+    }
+
+    /* Floating state indicator */
+    .state-badge {
+      position: absolute;
+      top: var(--space-3);
+      right: var(--space-4);
+      background: rgba(0,0,0,0.6);
+      color: rgba(255,255,255,0.8);
+      font-size: var(--font-size-xs);
+      padding: var(--space-1) var(--space-3);
+      border-radius: 100px;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255,255,255,0.1);
+      pointer-events: none;
+    }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2);
+    }
+
+    .preset-btn {
+      padding: var(--space-2) var(--space-2);
+      border-radius: var(--radius);
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1.5px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-text);
+      transition: all var(--transition);
+      text-align: center;
+    }
+
+    .preset-btn:hover,
+    .preset-btn.active {
+      background: var(--color-accent-light);
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="../index.html" class="site-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 2v4M12 18v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M2 12h4M18 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+      </svg>
+      Optics Lab
+    </a>
+    <nav class="site-nav">
+      <a href="../index.html" class="nav-link">← トップ</a>
+      <a href="lens.html" class="nav-link">レンズ</a>
+      <a href="slits.html" class="nav-link">光線モデル</a>
+      <a href="3d.html" class="nav-link active">3D</a>
+    </nav>
+  </div>
+</header>
+
+<div class="sim-page">
+  <div class="sim-toolbar">
+    <div>
+      <span style="font-weight:700;">3D光線モデル</span>
+      <span style="font-size:var(--font-size-xs); color:var(--color-text-muted); margin-left:var(--space-3);">
+        点光源・遮蔽物・スクリーンの3D配置
+      </span>
+    </div>
+    <div class="mode-switcher" id="modeSwitcher" style="margin-left:auto;">
+      <button class="mode-btn active" data-mode="student">自習</button>
+      <button class="mode-btn" data-mode="teacher">授業</button>
+    </div>
+    <button id="btnFullscreen" class="btn btn--ghost btn--sm">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="sim-body" id="simBody">
+
+    <!-- Sidebar -->
+    <aside class="sim-sidebar" id="simSidebar">
+
+      <!-- Presets -->
+      <div>
+        <div class="control-label">場面プリセット</div>
+        <div class="preset-grid" style="margin-top: var(--space-2);">
+          <button class="preset-btn active" onclick="loadPreset('shadow1')">🔺 三角穴の影</button>
+          <button class="preset-btn" onclick="loadPreset('shadow2')">💡 2光源の影</button>
+          <button class="preset-btn" onclick="loadPreset('lens3d')">🔵 レンズ集光</button>
+          <button class="preset-btn" onclick="loadPreset('cone')">🌂 光の錐</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Controls -->
+      <div>
+        <div class="control-label">パラメーター</div>
+        <div style="margin-top:var(--space-3); display:flex; flex-direction:column; gap:var(--space-4);">
+
+          <div class="control-group">
+            <div class="control-row">
+              <span class="control-label">光線の本数</span>
+              <span class="range-value" id="val-rays">200</span>
+            </div>
+            <input type="range" id="range-rays" min="20" max="600" value="200" step="20">
+          </div>
+
+          <div class="control-group">
+            <div class="control-row">
+              <span class="control-label">光源の高さ</span>
+              <span class="range-value" id="val-srcY">0</span>
+            </div>
+            <input type="range" id="range-srcY" min="-3" max="3" value="0" step="0.1">
+          </div>
+
+          <div class="control-group">
+            <div class="control-row">
+              <span class="control-label">遮蔽物の位置</span>
+              <span class="range-value" id="val-barrierZ">0</span>
+            </div>
+            <input type="range" id="range-barrierZ" min="-3" max="3" value="0" step="0.1">
+          </div>
+
+          <label class="checkbox-label">
+            <input type="checkbox" id="cb-showscreen" checked>
+            スクリーンを表示
+          </label>
+
+          <label class="checkbox-label">
+            <input type="checkbox" id="cb-showaxes" checked>
+            座標軸を表示
+          </label>
+
+          <label class="checkbox-label">
+            <input type="checkbox" id="cb-shadowcone">
+            影錐を表示
+          </label>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div style="background: var(--color-surface); border-radius: var(--radius); padding: var(--space-4);">
+        <div class="control-label" style="margin-bottom: var(--space-3);">3Dの見方</div>
+        <ul style="font-size:var(--font-size-xs); color:var(--color-text-muted); line-height:2; margin-left:var(--space-3);">
+          <li>ドラッグ: 視点を回転</li>
+          <li>スクロール: ズームイン/アウト</li>
+          <li>右ドラッグ: パン移動</li>
+        </ul>
+      </div>
+
+      <div class="divider"></div>
+
+      <div style="font-size:var(--font-size-xs); color:var(--color-text-muted); line-height:1.8;">
+        <strong>学習のポイント</strong><br>
+        光は点光源から球状に広がり、遮蔽物を通ると「影錐（えいすい）」ができる。
+        スクリーンの位置で影の大きさや形が変わることを観察しよう。
+      </div>
+    </aside>
+
+    <!-- 3D Canvas -->
+    <div class="sim-canvas-wrap" id="canvasWrap">
+      <canvas id="canvas3d"></canvas>
+      <div class="state-badge" id="presetLabel">三角穴の影</div>
+      <div class="canvas-hint">ドラッグ: 回転 | スクロール: ズーム</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Three.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.162.0/examples/js/controls/OrbitControls.js"></script>
+<script src="../js/optics.js"></script>
+<script>
+  /* ============================================================
+     3D Light Ray Simulation using Three.js
+  ============================================================ */
+
+  const canvasEl = document.getElementById('canvas3d');
+  const wrap = document.getElementById('canvasWrap');
+
+  // Scene setup
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0a14);
+  scene.fog = new THREE.FogExp2(0x0a0a14, 0.06);
+
+  const camera = new THREE.PerspectiveCamera(50, wrap.clientWidth / wrap.clientHeight, 0.1, 100);
+  camera.position.set(6, 5, 8);
+
+  const renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  function resizeRenderer() {
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    if (w <= 0 || h <= 0) return;
+    renderer.setSize(w, h);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resizeRenderer();
+  window.addEventListener('resize', resizeRenderer);
+
+  // OrbitControls
+  const controls = new THREE.OrbitControls(camera, canvasEl);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 2;
+  controls.maxDistance = 25;
+
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
+  scene.add(ambientLight);
+
+  // ---- Helper: Grid & Axes ----
+  const gridHelper = new THREE.GridHelper(12, 24, 0x333355, 0x1e1e3a);
+  scene.add(gridHelper);
+
+  const axesHelper = new THREE.AxesHelper(4);
+  scene.add(axesHelper);
+
+  // ---- Materials ----
+  const RAY_MATERIAL = new THREE.LineBasicMaterial({
+    color: 0xffd700, transparent: true, opacity: 0.18, depthWrite: false
+  });
+  const RAY_MATERIAL_HIGHLIGHT = new THREE.LineBasicMaterial({
+    color: 0xffee88, transparent: true, opacity: 0.6, depthWrite: false
+  });
+
+  // ---- Scene Objects ----
+  let lightSource;
+  let barrierGroup = new THREE.Group();
+  let screenMesh;
+  let rayGroup = new THREE.Group();
+  let shadowConeGroup = new THREE.Group();
+  scene.add(barrierGroup);
+  scene.add(rayGroup);
+  scene.add(shadowConeGroup);
+
+  // State
+  let state = {
+    preset: 'shadow1',
+    rayCount: 200,
+    srcY: 0,
+    barrierZ: 0,
+    showScreen: true,
+    showAxes: true,
+    showShadowCone: false,
+  };
+
+  /* ---- Geometry Helpers ---- */
+
+  function makeGlowSphere(color, r, pos) {
+    const geo = new THREE.SphereGeometry(r, 24, 24);
+    const mat = new THREE.MeshStandardMaterial({
+      color, emissive: color, emissiveIntensity: 2,
+      transparent: true, opacity: 0.95
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.copy(pos);
+    // Point light
+    const pLight = new THREE.PointLight(color, 2, 20);
+    pLight.position.copy(pos);
+    mesh.add(pLight);
+    return mesh;
+  }
+
+  function clearGroup(group) {
+    while (group.children.length) {
+      const c = group.children[0];
+      if (c.geometry) c.geometry.dispose();
+      if (c.material) c.material.dispose();
+      group.remove(c);
+    }
+  }
+
+  /* ---- Screen ---- */
+  function makeScreen(posZ, w = 5, h = 4) {
+    const geo = new THREE.PlaneGeometry(w, h);
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0x334155, side: THREE.DoubleSide,
+      transparent: true, opacity: 0.85
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.y = 0;
+    mesh.position.set(0, h / 2 - 2, posZ);
+    // Edge wireframe
+    const edges = new THREE.EdgesGeometry(geo);
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0x60a5fa, opacity: 0.4, transparent: true });
+    const wireframe = new THREE.LineSegments(edges, edgeMat);
+    mesh.add(wireframe);
+    return mesh;
+  }
+
+  /* ---- Barrier with a hole ---- */
+  function makeBarrierWithTriangleHole(posZ) {
+    const group = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({ color: 0x1e293b, side: THREE.DoubleSide });
+
+    // 4 pieces around a triangle hole
+    const boardW = 4, boardH = 4;
+    const triSize = 1.2;
+
+    // Approximate: use a plane with clip (simplified: use 3 rectangular panels)
+    // Full board
+    const fullGeo = new THREE.PlaneGeometry(boardW, boardH);
+    const mesh = new THREE.Mesh(fullGeo, new THREE.MeshStandardMaterial({ color: 0x1e293b, side: THREE.DoubleSide, transparent: true, opacity: 0.9 }));
+    mesh.position.set(0, 0, posZ);
+    group.add(mesh);
+
+    // Triangle "hole" indicator (glowing outline)
+    const triShape = new THREE.Shape();
+    const hw = triSize / 2;
+    triShape.moveTo(0, triSize * 0.6);
+    triShape.lineTo(-hw, -triSize * 0.4);
+    triShape.lineTo(hw, -triSize * 0.4);
+    triShape.closePath();
+
+    const triGeo = new THREE.ShapeGeometry(triShape);
+    const triMat = new THREE.MeshBasicMaterial({ color: 0x10b981, transparent: true, opacity: 0.15, side: THREE.DoubleSide });
+    const triMesh = new THREE.Mesh(triGeo, triMat);
+    triMesh.position.set(0, 0, posZ + 0.01);
+    group.add(triMesh);
+
+    // Triangle outline
+    const triEdgeGeo = new THREE.BufferGeometry();
+    const verts = new Float32Array([
+      0, triSize * 0.6, 0,
+      -hw, -triSize * 0.4, 0,
+      hw, -triSize * 0.4, 0,
+      0, triSize * 0.6, 0,
+    ]);
+    triEdgeGeo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+    const triEdge = new THREE.Line(triEdgeGeo, new THREE.LineBasicMaterial({ color: 0x10b981, opacity: 0.9, transparent: true }));
+    triEdge.position.set(0, 0, posZ + 0.01);
+    group.add(triEdge);
+
+    return group;
+  }
+
+  /* ---- Ray casting through triangle hole ---- */
+  function generateRaysThroughTriangle(srcPos, barrierZ, count) {
+    const rays = [];
+    // Triangle hole vertices
+    const triSize = 1.2;
+    const hw = triSize / 2;
+    const triVerts = [
+      new THREE.Vector3(0, triSize * 0.6, barrierZ),
+      new THREE.Vector3(-hw, -triSize * 0.4, barrierZ),
+      new THREE.Vector3(hw, -triSize * 0.4, barrierZ),
+    ];
+
+    const added = new Set();
+    let attempts = 0;
+    while (rays.length < count && attempts < count * 10) {
+      attempts++;
+      // Random point inside triangle using barycentric coords
+      const r1 = Math.random(), r2 = Math.random();
+      const sqr1 = Math.sqrt(r1);
+      const u = 1 - sqr1, v = sqr1 * (1 - r2), w = sqr1 * r2;
+      const hitX = u * triVerts[0].x + v * triVerts[1].x + w * triVerts[2].x;
+      const hitY = u * triVerts[0].y + v * triVerts[1].y + w * triVerts[2].y;
+      const hitPoint = new THREE.Vector3(hitX, hitY, barrierZ);
+      rays.push({ from: srcPos.clone(), hit: hitPoint });
+    }
+    return rays;
+  }
+
+  /* ---- Build ray geometry ---- */
+  function buildRayLines(rays, extendZ, material, alpha = 0.18) {
+    const group = new THREE.Group();
+    const positions = [];
+
+    for (const ray of rays) {
+      const dir = ray.hit.clone().sub(ray.from).normalize();
+      const end = ray.hit.clone().add(dir.multiplyScalar(extendZ));
+      positions.push(ray.from.x, ray.from.y, ray.from.z);
+      positions.push(ray.hit.x, ray.hit.y, ray.hit.z);
+      positions.push(NaN, NaN, NaN); // break
+
+      // After-barrier segment
+      positions.push(ray.hit.x, ray.hit.y, ray.hit.z);
+      positions.push(end.x, end.y, end.z);
+      positions.push(NaN, NaN, NaN);
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    const mat = material.clone();
+    mat.opacity = alpha;
+    const line = new THREE.LineSegments(geo, mat);
+    group.add(line);
+    return group;
+  }
+
+  /* ---- Presets ---- */
+  const PRESETS = {
+    shadow1: {
+      label: '三角穴の影',
+      srcPos: () => new THREE.Vector3(-3, state.srcY, 0),
+      barrierZ: () => state.barrierZ + 0,
+      screenZ: 4,
+      build: buildShadow1,
+    },
+    shadow2: {
+      label: '2光源の影',
+      srcPos: () => new THREE.Vector3(-3, state.srcY, 0),
+      barrierZ: () => state.barrierZ + 0,
+      screenZ: 4,
+      build: buildShadow2,
+    },
+    lens3d: {
+      label: 'レンズ集光',
+      build: buildLens3D,
+    },
+    cone: {
+      label: '光の錐',
+      build: buildCone,
+    },
+  };
+
+  function buildShadow1() {
+    clearScene();
+    const bz = state.barrierZ;
+    const srcX = -3;
+    const srcPos = new THREE.Vector3(srcX, state.srcY, 0);
+
+    // Light source
+    lightSource = makeGlowSphere(0xffd700, 0.12, srcPos);
+    scene.add(lightSource);
+
+    // Barrier
+    const barrier = makeBarrierWithTriangleHole(bz);
+    barrierGroup.add(barrier);
+
+    // Screen
+    if (state.showScreen) {
+      screenMesh = makeScreen(4);
+      scene.add(screenMesh);
+    }
+
+    // Rays
+    const rays = generateRaysThroughTriangle(srcPos, bz, state.rayCount);
+    const rg = buildRayLines(rays, 10, RAY_MATERIAL, 0.22);
+    rayGroup.add(rg);
+
+    // Shadow cone
+    if (state.showShadowCone) {
+      buildShadowConeVis(srcPos, bz);
+    }
+
+    document.getElementById('presetLabel').textContent = '三角穴の影';
+  }
+
+  function buildShadow2() {
+    clearScene();
+    const bz = state.barrierZ;
+
+    // 2 light sources
+    const src1 = new THREE.Vector3(-3, state.srcY + 0.8, 0);
+    const src2 = new THREE.Vector3(-3, state.srcY - 0.8, 0);
+
+    lightSource = makeGlowSphere(0xffd700, 0.1, src1);
+    scene.add(lightSource);
+    const ls2 = makeGlowSphere(0xff6b6b, 0.1, src2);
+    scene.add(ls2);
+
+    const barrier = makeBarrierWithTriangleHole(bz);
+    barrierGroup.add(barrier);
+
+    if (state.showScreen) {
+      screenMesh = makeScreen(4);
+      scene.add(screenMesh);
+    }
+
+    const rays1 = generateRaysThroughTriangle(src1, bz, state.rayCount / 2);
+    const rays2 = generateRaysThroughTriangle(src2, bz, state.rayCount / 2);
+    const rg1 = buildRayLines(rays1, 10, new THREE.LineBasicMaterial({ color: 0xffd700, transparent: true }), 0.2);
+    const rg2 = buildRayLines(rays2, 10, new THREE.LineBasicMaterial({ color: 0xff6b6b, transparent: true }), 0.2);
+    rayGroup.add(rg1, rg2);
+
+    document.getElementById('presetLabel').textContent = '2光源の影';
+  }
+
+  function buildLens3D() {
+    clearScene();
+    const srcPos = new THREE.Vector3(-4, state.srcY, 0);
+
+    // Light source
+    lightSource = makeGlowSphere(0xffd700, 0.12, srcPos);
+    scene.add(lightSource);
+
+    // Lens representation (disk)
+    const lensGeo = new THREE.CircleGeometry(1.5, 48);
+    const lensMat = new THREE.MeshStandardMaterial({
+      color: 0x60a5fa, transparent: true, opacity: 0.3, side: THREE.DoubleSide
+    });
+    const lensMesh = new THREE.Mesh(lensGeo, lensMat);
+    lensMesh.rotation.y = Math.PI / 2;
+    lensMesh.position.set(0, 0, 0);
+    scene.add(lensMesh);
+
+    // Focal point
+    const focalDist = 2;
+    const focalSphere = makeGlowSphere(0xfbbf24, 0.07, new THREE.Vector3(focalDist, 0, 0));
+    scene.add(focalSphere);
+
+    // Screen
+    if (state.showScreen) {
+      screenMesh = makeScreen(0);
+      screenMesh.rotation.y = Math.PI / 2;
+      screenMesh.position.set(focalDist + 0.5, 0.5, 0);
+      scene.add(screenMesh);
+    }
+
+    // Parallel rays converging to focus
+    const n = state.rayCount;
+    const positions = [];
+    for (let i = 0; i < n; i++) {
+      const angle = (i / n) * Math.PI * 2;
+      const r = Math.random() * 1.5;
+      const hy = r * Math.cos(angle);
+      const hz = r * Math.sin(angle);
+      // Ray: from far left to lens plane
+      const hitX = 0;
+      // then to focal point
+      positions.push(-5, hy, hz, hitX, hy, hz, NaN, NaN, NaN);
+      positions.push(hitX, hy, hz, focalDist, 0, 0, NaN, NaN, NaN);
+      positions.push(focalDist, 0, 0, focalDist + 3, hy * (-1), hz * (-1), NaN, NaN, NaN);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    const mat = new THREE.LineBasicMaterial({ color: 0xffd700, transparent: true, opacity: 0.15 });
+    rayGroup.add(new THREE.LineSegments(geo, mat));
+
+    document.getElementById('presetLabel').textContent = 'レンズ集光（3D）';
+  }
+
+  function buildCone() {
+    clearScene();
+    const srcPos = new THREE.Vector3(-4, state.srcY, 0);
+    lightSource = makeGlowSphere(0xffd700, 0.12, srcPos);
+    scene.add(lightSource);
+
+    // Cone of rays spreading out
+    const n = state.rayCount;
+    const positions = [];
+    for (let i = 0; i < n; i++) {
+      const theta = Math.acos(1 - 2 * Math.random());
+      const phi = Math.random() * Math.PI * 2;
+      const dx = Math.sin(theta) * Math.cos(phi);
+      const dy = Math.sin(theta) * Math.sin(phi);
+      const dz = Math.cos(theta) * 0.5; // bias forward
+      const len = 8 + Math.random() * 2;
+      positions.push(srcPos.x, srcPos.y, srcPos.z);
+      positions.push(srcPos.x + dx * len * 0.6, srcPos.y + dy * len * 0.6, srcPos.z + dz * len * 0.6);
+      positions.push(NaN, NaN, NaN);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    const mat = new THREE.LineBasicMaterial({ color: 0xffd700, transparent: true, opacity: 0.12 });
+    rayGroup.add(new THREE.LineSegments(geo, mat));
+
+    document.getElementById('presetLabel').textContent = '光の球面波（3D）';
+  }
+
+  function buildShadowConeVis(srcPos, barrierZ) {
+    // Visual shadow cone (triangular prism approximation)
+    const triSize = 1.2;
+    const hw = triSize / 2;
+    // 3 edges of shadow cone from source through triangle vertices
+    const vertices = [
+      new THREE.Vector3(0, triSize * 0.6, barrierZ),
+      new THREE.Vector3(-hw, -triSize * 0.4, barrierZ),
+      new THREE.Vector3(hw, -triSize * 0.4, barrierZ),
+    ];
+    const positions = [];
+    for (const v of vertices) {
+      const dir = v.clone().sub(srcPos).normalize();
+      positions.push(srcPos.x, srcPos.y, srcPos.z);
+      positions.push(v.x + dir.x * 8, v.y + dir.y * 8, v.z + dir.z * 8);
+      positions.push(NaN, NaN, NaN);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    const mat = new THREE.LineBasicMaterial({ color: 0xff4444, transparent: true, opacity: 0.5 });
+    shadowConeGroup.add(new THREE.LineSegments(geo, mat));
+  }
+
+  function clearScene() {
+    clearGroup(barrierGroup);
+    clearGroup(rayGroup);
+    clearGroup(shadowConeGroup);
+    if (lightSource) { scene.remove(lightSource); lightSource = null; }
+    if (screenMesh) { scene.remove(screenMesh); screenMesh = null; }
+  }
+
+  /* ---- Load Preset ---- */
+  function loadPreset(name) {
+    state.preset = name;
+    document.querySelectorAll('.preset-btn').forEach((btn, i) => {
+      const names = ['shadow1', 'shadow2', 'lens3d', 'cone'];
+      btn.classList.toggle('active', names[i] === name);
+    });
+    PRESETS[name]?.build();
+  }
+
+  // Initial load
+  loadPreset('shadow1');
+
+  /* ---- Controls binding ---- */
+  UI.bindRange('range-rays', 'val-rays', v => {
+    state.rayCount = Math.round(v);
+    loadPreset(state.preset);
+  });
+  UI.bindRange('range-srcY', 'val-srcY', v => {
+    state.srcY = v;
+    loadPreset(state.preset);
+  });
+  UI.bindRange('range-barrierZ', 'val-barrierZ', v => {
+    state.barrierZ = v;
+    loadPreset(state.preset);
+  });
+  UI.bindCheckbox('cb-showscreen', v => { state.showScreen = v; loadPreset(state.preset); });
+  UI.bindCheckbox('cb-showaxes', v => {
+    state.showAxes = v;
+    axesHelper.visible = v;
+    gridHelper.visible = v;
+  });
+  UI.bindCheckbox('cb-shadowcone', v => { state.showShadowCone = v; loadPreset(state.preset); });
+
+  UI.initModeButtons('#modeSwitcher', { setMode: m => {
+    document.body.classList.remove('teacher-mode');
+    if (m === 'teacher') document.body.classList.add('teacher-mode');
+  }});
+  document.getElementById('btnFullscreen').addEventListener('click', () => UI.toggleFullscreen(wrap));
+
+  /* ---- Render Loop ---- */
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // Expose for external calls
+  window.loadPreset = loadPreset;
+</script>
+</body>
+</html>

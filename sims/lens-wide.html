@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>可変絞りレンズ — Optics Lab</title>
+  <link rel="stylesheet" href="../css/main.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="../index.html" class="site-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 2v4M12 18v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M2 12h4M18 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+      </svg>
+      Optics Lab
+    </a>
+    <nav class="site-nav">
+      <a href="../index.html" class="nav-link">← トップ</a>
+      <a href="lens.html" class="nav-link">通常レンズ</a>
+      <a href="lens-wide.html" class="nav-link active">可変絞り</a>
+    </nav>
+  </div>
+</header>
+
+<div class="sim-page">
+  <div class="sim-toolbar">
+    <div>
+      <span style="font-weight:700;">可変絞りレンズ</span>
+      <span style="font-size:var(--font-size-xs); color:var(--color-text-muted); margin-left:var(--space-3);">
+        絞り（開口部）の大きさによる結像の変化
+      </span>
+    </div>
+    <div class="mode-switcher" id="modeSwitcher" style="margin-left:auto;">
+      <button class="mode-btn active" data-mode="student">自習</button>
+      <button class="mode-btn" data-mode="teacher">授業</button>
+      <button class="mode-btn" data-mode="sheet">作図</button>
+    </div>
+    <button id="btnFullscreen" class="btn btn--ghost btn--sm" title="フルスクリーン">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="sim-body" id="simBody">
+
+    <!-- Sidebar -->
+    <aside class="sim-sidebar" id="simSidebar">
+      <div class="control-label">レンズ設定</div>
+
+      <div style="display:flex; flex-direction:column; gap:var(--space-4); margin-top:var(--space-3);">
+
+        <div class="control-group">
+          <div class="control-row">
+            <span class="control-label">焦点距離 f</span>
+            <span class="range-value" id="val-f">120</span>px
+          </div>
+          <input type="range" id="range-f" min="60" max="220" value="120" step="5">
+        </div>
+
+        <div class="control-group">
+          <div class="control-row">
+            <span class="control-label">物体の位置 a</span>
+            <span class="range-value" id="val-a">200</span>px
+          </div>
+          <input type="range" id="range-a" min="80" max="400" value="200" step="5">
+        </div>
+
+        <div class="control-group">
+          <div class="control-row">
+            <span class="control-label">絞り（開口半径）</span>
+            <span class="range-value" id="val-aperture">60</span>
+          </div>
+          <input type="range" id="range-aperture" min="5" max="100" value="60" step="5">
+        </div>
+
+        <div class="control-group">
+          <div class="control-row">
+            <span class="control-label">光線の本数</span>
+            <span class="range-value" id="val-rays">12</span>
+          </div>
+          <input type="range" id="range-rays" min="3" max="30" value="12" step="1">
+        </div>
+
+        <label class="checkbox-label">
+          <input type="checkbox" id="cb-construction" checked>
+          作図線（주軸・焦点）
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" id="cb-blocked">
+          絞り外の光線を暗示（ブロック）
+        </label>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="info-panel" id="infoPanel">
+        <div class="info-row">
+          <span class="info-label">焦点距離 f</span>
+          <span class="info-value" id="info-f">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">物体距離 a</span>
+          <span class="info-value" id="info-a">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">像の距離 b</span>
+          <span class="info-value" id="info-b">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">倍率 m</span>
+          <span class="info-value" id="info-m">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">像の種類</span>
+          <span class="info-value" id="info-type">—</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="formula-box">
+        <div class="formula-title">レンズの式</div>
+        <div class="formula-math">1/f = 1/a + 1/b</div>
+        <div class="formula-note" style="margin-top:var(--space-2);">絞りを小さくすると、コマ収差・ボケが減少するが光量も低下する。</div>
+      </div>
+    </aside>
+
+    <!-- Canvas -->
+    <div class="sim-canvas-wrap" id="canvasWrap">
+      <canvas id="mainCanvas"></canvas>
+      <div class="canvas-hint">スライダーで絞りと焦点距離を変更</div>
+    </div>
+
+  </div>
+</div>
+
+<script src="../js/optics.js"></script>
+<script>
+  /* ============================================================
+     Variable Aperture Lens Simulation
+  ============================================================ */
+
+  const canvas = document.getElementById('mainCanvas');
+  const wrap = document.getElementById('canvasWrap');
+  const ctx = canvas.getContext('2d');
+  const OC = new OpticsCanvas(canvas);
+
+  const state = {
+    f: 120, a: 200, aperture: 60,
+    rayCount: 12, showConstruction: true, blocked: false
+  };
+
+  function resize() {
+    canvas.width = wrap.clientWidth;
+    canvas.height = wrap.clientHeight;
+    draw();
+  }
+
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    if (W <= 0 || H <= 0) return;
+    OC.drawBackground();
+    if (state.showConstruction) OC.drawGrid();
+
+    const CX = W / 2, CY = H / 2;
+    const { f, a, aperture, rayCount } = state;
+
+    const b = Optics.lensEquation(a, f);
+    const m = Optics.magnification(a, b);
+    const info = Optics.imageType(m);
+
+    // Axis
+    if (state.showConstruction) OC.drawAxis();
+
+    // Lens (with aperture indicator)
+    OC.drawConvexLens(CX, CY, aperture, 12);
+
+    // Aperture "stops" (blocked region overlay)
+    if (state.blocked) {
+      ctx.fillStyle = 'rgba(30,30,60,0.85)';
+      // Top block
+      ctx.fillRect(CX - 6, CY - 100, 12, 100 - aperture);
+      // Bottom block
+      ctx.fillRect(CX - 6, CY + aperture, 12, 100 - aperture);
+    }
+
+    // Aperture boundary lines
+    ctx.strokeStyle = '#60a5fa';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 4]);
+    ctx.beginPath(); ctx.moveTo(CX - 4, CY - aperture); ctx.lineTo(CX + 4, CY - aperture); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(CX - 4, CY + aperture); ctx.lineTo(CX + 4, CY + aperture); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Object arrow
+    const objX = CX - a;
+    const objH = 40;
+    OC.drawObjectArrow(objX, CY, objH);
+
+    // Focal points
+    if (state.showConstruction) {
+      OC.drawFocusPoint(CX + f, CY, 'F (right)');
+      OC.drawFocusPoint(CX - f, CY, 'F (left)');
+    }
+
+    // Rays through aperture
+    const srcY = CY - objH;
+    const nRays = Math.round(rayCount);
+    for (let i = 0; i < nRays; i++) {
+      // Distribute rays from -aperture to +aperture on the lens plane
+      const lensHitY = CY - aperture + (i / (nRays - 1)) * (aperture * 2);
+      const lensHitX = CX;
+
+      // Direction from source to lens hit
+      const dx = lensHitX - objX;
+      const dy = lensHitY - srcY;
+
+      // After lens: paraxial approximation
+      // Real exit ray direction using lens formula
+      const alpha = Math.atan2(dy, dx); // incident angle
+      // For thin lens: exit ray from (lensHitX, lensHitY) passes through image point
+      const imgX = b > 0 ? CX + b : CX - Math.abs(b);
+      const imgY = CY - objH * m;
+
+      const blocked = Math.abs(lensHitY - CY) > aperture;
+      const opacity = blocked ? 0.08 : 0.5;
+      const color = blocked ? '#334155' : '#fcd34d';
+
+      // Draw ray from object to lens
+      ctx.strokeStyle = blocked ? 'rgba(50,60,90,0.3)' : `rgba(252,211,77,${opacity})`;
+      ctx.lineWidth = 1;
+      ctx.setLineDash(blocked ? [2, 4] : []);
+      ctx.beginPath();
+      ctx.moveTo(objX, srcY);
+      ctx.lineTo(lensHitX, lensHitY);
+      ctx.stroke();
+
+      if (!blocked && b > 0 && imgX > 0 && imgX < W) {
+        // Real image: extend beyond lens to image
+        ctx.setLineDash([]);
+        ctx.strokeStyle = `rgba(252,211,77,${opacity})`;
+        ctx.beginPath();
+        ctx.moveTo(lensHitX, lensHitY);
+        ctx.lineTo(imgX, imgY);
+        ctx.stroke();
+        // Extend slightly past
+        const extDir = new DOMPoint(imgX - lensHitX, imgY - lensHitY);
+        const extLen = Math.sqrt(extDir.x**2 + extDir.y**2);
+        const ux = extDir.x / extLen, uy = extDir.y / extLen;
+        ctx.strokeStyle = `rgba(252,211,77,0.15)`;
+        ctx.beginPath();
+        ctx.moveTo(imgX, imgY);
+        ctx.lineTo(imgX + ux * 60, imgY + uy * 60);
+        ctx.stroke();
+      } else if (!blocked) {
+        // Virtual image: virtual rays
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = `rgba(167,139,250,0.4)`;
+        ctx.beginPath();
+        ctx.moveTo(lensHitX, lensHitY);
+        ctx.lineTo(imgX, imgY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+
+    // Image arrow
+    if (b !== Infinity) {
+      const imgX = b > 0 ? CX + b : CX - Math.abs(b);
+      const imgH = objH * m;
+      if (imgX > 0 && imgX < W) {
+        OC.drawImageArrow(imgX, CY, imgH, b > 0);
+      }
+    }
+
+    // Update info
+    const bStr = isFinite(b) ? b.toFixed(1) + ' px' : '∞';
+    const mStr = isFinite(m) ? m.toFixed(2) : '∞';
+    UI.updateInfo({
+      'info-f': f + ' px',
+      'info-a': a + ' px',
+      'info-b': bStr,
+      'info-m': mStr,
+      'info-type': info.label,
+    });
+  }
+
+  // Controls
+  UI.bindRange('range-f', 'val-f', v => { state.f = v; draw(); });
+  UI.bindRange('range-a', 'val-a', v => { state.a = v; draw(); });
+  UI.bindRange('range-aperture', 'val-aperture', v => { state.aperture = v; draw(); });
+  UI.bindRange('range-rays', 'val-rays', v => { state.rayCount = v; draw(); });
+  UI.bindCheckbox('cb-construction', v => { state.showConstruction = v; draw(); });
+  UI.bindCheckbox('cb-blocked', v => { state.blocked = v; draw(); });
+
+  UI.initModeButtons('#modeSwitcher', {
+    setMode: mode => {
+      document.body.classList.remove('teacher-mode', 'sheet-mode');
+      if (mode === 'teacher') document.body.classList.add('teacher-mode');
+      if (mode === 'sheet') document.body.classList.add('sheet-mode');
+      setTimeout(draw, 100);
+    }
+  });
+
+  document.getElementById('btnFullscreen').addEventListener('click', () => UI.toggleFullscreen(wrap));
+
+  const resizeObs = new ResizeObserver(resize);
+  resizeObs.observe(wrap);
+  resize();
+</script>
+</body>
+</html>
