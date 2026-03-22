@@ -124,7 +124,7 @@ PASS  lens-wide.html: uses lensEquation()
 PASS  concave.html: contains lens formula notation
 PASS  practice.html: uses lensEquation()
 PASS  css/main.css: 16KB
-PASS  js/optics.js: 14KB
+PASS  js/optics.js: 15KB
 PASS  sims/3d.html: 23KB
 PASS  sims/practice.html: 21KB
 PASS  sims/lens.html: 13KB

@@ -105,6 +105,14 @@ class OpticsCanvas {
   get width() { return this.cvs.width; }
   get height() { return this.cvs.height; }
 
+  // 色にアルファを安全に適用（hex, rgba 両対応）
+  _applyAlpha(color, alphaHex) {
+    const a = parseInt(alphaHex, 16) / 255;
+    const m = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/);
+    if (m) return `rgba(${m[1]},${m[2]},${m[3]},${a.toFixed(3)})`;
+    return color + alphaHex;
+  }
+
   clear() {
     this.ctx.clearRect(0, 0, this.w, this.h);
   }
@@ -149,7 +157,7 @@ class OpticsCanvas {
     // グロー効果
     const grd = ctx.createRadialGradient(x, y, 0, x, y, r * 3);
     grd.addColorStop(0, color);
-    grd.addColorStop(0.4, color + '55');
+    grd.addColorStop(0.4, this._applyAlpha(color, '55'));
     grd.addColorStop(1, 'transparent');
     ctx.beginPath();
     ctx.arc(x, y, r * 3, 0, Math.PI * 2);
@@ -183,7 +191,7 @@ class OpticsCanvas {
     ctx.fill();
     // グロー（白背景では控えめに）
     const grd = ctx.createRadialGradient(x, midY, 0, x, midY, r * 5);
-    grd.addColorStop(0, color + '18');
+    grd.addColorStop(0, this._applyAlpha(color, '18'));
     grd.addColorStop(1, 'transparent');
     ctx.beginPath();
     ctx.arc(x, midY, r * 5, 0, Math.PI * 2);
@@ -207,9 +215,9 @@ class OpticsCanvas {
     ctx.quadraticCurveTo(x - bulge, h / 2, x, top);
     ctx.closePath();
     const grd = ctx.createLinearGradient(x - bulge, 0, x + bulge, 0);
-    grd.addColorStop(0, color + '22');
-    grd.addColorStop(0.5, color + '55');
-    grd.addColorStop(1, color + '22');
+    grd.addColorStop(0, this._applyAlpha(color, '22'));
+    grd.addColorStop(0.5, this._applyAlpha(color, '55'));
+    grd.addColorStop(1, this._applyAlpha(color, '22'));
     ctx.fillStyle = grd;
     ctx.fill();
     ctx.stroke();
@@ -242,7 +250,7 @@ class OpticsCanvas {
     ctx.lineTo(x, h - padding);
     ctx.stroke();
     // ハッチング
-    ctx.strokeStyle = color + '66';
+    ctx.strokeStyle = this._applyAlpha(color, '66');
     ctx.lineWidth = 1.5;
     for (let y = padding; y < h - padding; y += 12) {
       ctx.beginPath();
@@ -275,7 +283,7 @@ class OpticsCanvas {
     }
     ctx.stroke();
     // ハッチング
-    ctx.strokeStyle = color + '55';
+    ctx.strokeStyle = this._applyAlpha(color, '55');
     ctx.lineWidth = 1.5;
     const hatchSteps = Math.floor(mirrorH / 10);
     for (let i = 0; i < hatchSteps; i++) {
@@ -303,7 +311,7 @@ class OpticsCanvas {
     const { ctx } = this;
     ctx.fillStyle = color;
     ctx.fillRect(x, 0, 8, h);
-    ctx.fillStyle = color + 'aa';
+    ctx.fillStyle = this._applyAlpha(color, 'aa');
     ctx.fillRect(x + 8, 0, 4, h);
   }
 
