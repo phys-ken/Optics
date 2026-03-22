@@ -27,6 +27,7 @@
       Optics Lab
     </a>
     <nav class="site-nav">
+      <a href="../index.html" class="nav-link">← トップ</a>
       <a href="lens.html" class="nav-link active">レンズ</a>
       <a href="lens-object.html" class="nav-link">物体の像</a>
       <a href="mirror.html" class="nav-link">平面鏡</a>
@@ -34,6 +35,7 @@
       <a href="slits.html" class="nav-link">光線モデル</a>
       <a href="eye.html" class="nav-link">目</a>
       <a href="3d.html" class="nav-link">3D</a>
+      <a href="practice.html" class="nav-link">練習</a>
     </nav>
   </div>
 </header>
@@ -218,7 +220,7 @@
     if (w <= 0 || h <= 0) return;
 
     oc.drawBackground();
-    oc.drawGrid(Math.floor(w / 20), 'rgba(255,255,255,0.03)');
+    oc.drawGrid(Math.floor(w / 20));
     oc.drawAxis();
 
     const lx = lensX();
@@ -226,13 +228,13 @@
     const { a, b, m, imgX, imgY } = calcImage();
 
     // Focal points
-    oc.drawFocusPoint(lx + f, h / 2, '#fbbf24', 'F');
-    oc.drawFocusPoint(lx - f, h / 2, '#fbbf24', 'F');
+    oc.drawFocusPoint(lx + f, h / 2);
+    oc.drawFocusPoint(lx - f, h / 2);
 
     if (showDimLine) {
-      oc.drawDimensionLine(srcX, lx, h * 0.88, `a = ${a.toFixed(0)}`, 'rgba(255,220,100,0.5)');
+      oc.drawDimensionLine(srcX, lx, h * 0.88, `a = ${a.toFixed(0)}`, 'rgba(200,120,0,0.5)');
       if (isFinite(imgX)) {
-        oc.drawDimensionLine(lx, imgX, h * 0.88, `b = ${Math.abs(b).toFixed(0)}`, 'rgba(100,200,255,0.5)');
+        oc.drawDimensionLine(lx, imgX, h * 0.88, `b = ${Math.abs(b).toFixed(0)}`, 'rgba(37,99,235,0.5)');
       }
     }
 
@@ -246,20 +248,20 @@
       if (Math.abs(hitY - h / 2) > aperture / 2 + 1) continue;
 
       // Ray from source to lens
-      oc.drawRay(srcX, srcY, lx, hitY, '#ffd700', showAllRays ? 1 : 2, showAllRays ? 0.5 : 1);
+      oc.drawRay(srcX, srcY, lx, hitY, '#e67e00', showAllRays ? 1 : 2, showAllRays ? 0.5 : 1);
 
       // Ray after lens
       if (isFinite(imgX)) {
         const end = { x: w * 1.5, y: hitY + (imgY - hitY) * (w * 1.5 - lx) / (imgX - lx) };
-        oc.drawRay(lx, hitY, end.x, end.y, '#ffd700', showAllRays ? 1 : 2, showAllRays ? 0.5 : 1);
+        oc.drawRay(lx, hitY, end.x, end.y, '#e67e00', showAllRays ? 1 : 2, showAllRays ? 0.5 : 1);
         // Virtual ray (dashed) for virtual image
         if (b < 0 && !showAllRays) {
           oc.drawVirtualRay(lx, hitY, imgX - (imgX - lx) * 2, hitY - (imgY - hitY) * 2,
-            'rgba(255, 180, 50, 0.4)');
+            'rgba(200, 100, 0, 0.4)');
         }
       } else {
         // Parallel rays for object at focal point
-        oc.drawRay(lx, hitY, w * 1.5, hitY, '#ffd700', showAllRays ? 1 : 2, showAllRays ? 0.4 : 1);
+        oc.drawRay(lx, hitY, w * 1.5, hitY, '#e67e00', showAllRays ? 1 : 2, showAllRays ? 0.4 : 1);
       }
     }
 
@@ -267,47 +269,47 @@
     if (showConstruction) {
       // Ray 1: parallel → through far focal point
       const fary = h / 2;
-      oc.drawVirtualRay(srcX, srcY, lx, srcY, 'rgba(255,200,80,0.6)', 1.5);
+      oc.drawVirtualRay(srcX, srcY, lx, srcY, 'rgba(200,100,0,0.55)', 1.5);
       if (isFinite(imgX)) {
         const dxF = imgX - lx; const dyF = imgY - srcY;
-        oc.drawVirtualRay(lx, srcY, lx + dxF * 3, srcY + dyF * 3, 'rgba(255,200,80,0.4)', 1);
+        oc.drawVirtualRay(lx, srcY, lx + dxF * 3, srcY + dyF * 3, 'rgba(200,100,0,0.35)', 1);
       }
       // Ray 2: through center (undeviated)
       oc.drawVirtualRay(srcX, srcY, w * 1.5,
         h / 2 + (srcY - h / 2) * (1 - (w * 1.5 - srcX) / (lx - srcX) * (-1)),
-        'rgba(100,200,255,0.5)', 1.5);
+        'rgba(37,99,235,0.5)', 1.5);
       // Ray 3: through near focal point → parallel
       oc.drawVirtualRay(srcX, srcY, lx, h / 2 + (srcY - (h / 2)) * (lx - srcX) / (f + lx - srcX) * f / f,
-        'rgba(100,255,150,0.5)', 1.5);
+        'rgba(22,163,74,0.5)', 1.5);
     }
 
     // Image
     if (isFinite(imgX) && imgX > 0 && imgX < w * 2) {
       if (b > 0) {
         // Real image
-        oc.drawPointSource(imgX, imgY, 8, 'rgba(100,200,255,0.8)');
-        oc.drawLabel(imgX, imgY - 15, '像', 'rgba(100,200,255,0.9)', 11);
+        oc.drawPointSource(imgX, imgY, 8, 'rgba(37,99,235,0.8)');
+        oc.drawLabel(imgX, imgY - 15, '像', 'rgba(37,99,235,0.9)', 11);
       } else {
         // Virtual image (dashed circle)
         const ctx = oc.ctx;
         ctx.beginPath();
         ctx.arc(imgX, imgY, 8, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(100,200,255,0.6)';
+        ctx.strokeStyle = 'rgba(37,99,235,0.6)';
         ctx.lineWidth = 2;
         ctx.setLineDash([4, 3]);
         ctx.stroke();
         ctx.setLineDash([]);
-        oc.drawLabel(imgX, imgY - 15, '虚像', 'rgba(100,200,255,0.7)', 11);
+        oc.drawLabel(imgX, imgY - 15, '虚像', 'rgba(37,99,235,0.7)', 11);
       }
     }
 
     // Lens
     oc.drawConvexLens(lx, h, h * 0.8);
-    oc.drawLabel(lx, 20, 'レンズ', 'rgba(96,165,250,0.8)', 11);
+    oc.drawLabel(lx, 20, 'レンズ', 'rgba(37,99,235,0.8)', 11);
 
     // Source
-    oc.drawPointSource(srcX, srcY, 9, '#ffd700');
-    oc.drawLabel(srcX, srcY - 20, '光源', 'rgba(255,215,0,0.8)', 11);
+    oc.drawPointSource(srcX, srcY, 9);
+    oc.drawLabel(srcX, srcY - 20, '光源', 'rgba(200,110,0,0.85)', 11);
 
     // Report info
     const imgType = isFinite(b) ? Optics.imageType(m) : null;

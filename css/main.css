@@ -18,16 +18,16 @@
   --color-warn: #e67e22;
   --color-danger: #e74c3c;
 
-  /* Simulation colors */
-  --sim-bg: #1a1a2e;
-  --sim-bg-2: #16213e;
-  --sim-axis: rgba(255,255,255,0.15);
-  --sim-ray: #ffd700;
-  --sim-ray-2: #ff6b6b;
-  --sim-ray-3: #74c69d;
-  --sim-lens: #60a5fa;
-  --sim-mirror: #94a3b8;
-  --sim-image: rgba(255,200,50,0.4);
+  /* Simulation colors（白背景・グレースケール印刷対応） */
+  --sim-bg: #ffffff;
+  --sim-bg-2: #f5f5f5;
+  --sim-axis: rgba(0,0,0,0.2);
+  --sim-ray: #e67e00;
+  --sim-ray-2: #c83232;
+  --sim-ray-3: #1a8a4a;
+  --sim-lens: #2563eb;
+  --sim-mirror: #475569;
+  --sim-image: rgba(37,99,235,0.35);
 
   /* Typography */
   --font-body: "Hiragino Sans", "Meiryo", "Yu Gothic", system-ui, -apple-system, sans-serif;
@@ -625,7 +625,7 @@ input[type="range"]::-moz-range-thumb {
   position: absolute;
   font-size: var(--font-size-xs);
   font-weight: 600;
-  color: rgba(255,255,255,0.7);
+  color: rgba(0,0,0,0.6);
   pointer-events: none;
   font-family: var(--font-mono);
 }
@@ -650,7 +650,8 @@ input[type="range"]::-moz-range-thumb {
 @media print {
   .site-header, .sim-sidebar, .sim-toolbar, .canvas-hint { display: none !important; }
   .sim-body { grid-template-columns: 1fr; }
-  .sim-canvas-wrap { height: 100vh; }
+  .sim-canvas-wrap { height: 100vh; background: #fff !important; }
+  canvas { background: #fff !important; }
 }
 
 .sheet-mode .site-header,

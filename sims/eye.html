@@ -26,10 +26,15 @@
       Optics Lab
     </a>
     <nav class="site-nav">
+      <a href="../index.html" class="nav-link">← トップ</a>
       <a href="lens.html" class="nav-link">レンズ</a>
+      <a href="lens-object.html" class="nav-link">物体の像</a>
+      <a href="mirror.html" class="nav-link">平面鏡</a>
+      <a href="concave.html" class="nav-link">凹面鏡</a>
       <a href="slits.html" class="nav-link">光線モデル</a>
-      <a href="eye.html" class="nav-link active">目のしくみ</a>
+      <a href="eye.html" class="nav-link active">目</a>
       <a href="3d.html" class="nav-link">3D</a>
+      <a href="practice.html" class="nav-link">練習</a>
     </nav>
   </div>
 </header>
@@ -154,8 +159,8 @@
     const w = oc.width, h = oc.height;
     if (w <= 0 || h <= 0) return;
 
-    oc.drawBackground('#0f1825');
-    oc.drawGrid(Math.floor(w / 24), 'rgba(255,255,255,0.02)');
+    oc.drawBackground();
+    oc.drawGrid(Math.floor(w / 24));
 
     const lx = lensX();
     const f = focalLen();
@@ -177,15 +182,15 @@
     const ctx = oc.ctx;
     ctx.beginPath();
     ctx.ellipse((eyeL + eyeR) / 2, h / 2, eyeW / 2, eyeH / 2, 0, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.1)';
     ctx.lineWidth = 2;
     ctx.stroke();
 
     // Optical axis
-    oc.drawAxis('rgba(255,255,255,0.15)');
+    oc.drawAxis();
 
     // Focal points
-    oc.drawFocusPoint(lx + f, h / 2, '#fbbf24aa', 'f');
+    oc.drawFocusPoint(lx + f, h / 2, '#dc2626aa', 'f');
 
     // Rays
     const aperture = h * 0.2; // pupil size
@@ -194,7 +199,7 @@
       const t = numRays === 0 ? 0 : (i / numRays) - 0.5;
       const hitY = h / 2 + aperture * t;
 
-      oc.drawRay(srcX, srcY, lx, hitY, '#ffd700', showAllRays ? 1 : 2, showAllRays ? 0.5 : 1);
+      oc.drawRay(srcX, srcY, lx, hitY, '#e67e00', showAllRays ? 1 : 2, showAllRays ? 0.5 : 1);
 
       if (isFinite(imgX)) {
         const dx = imgX - lx, dy = imgY - hitY;
@@ -202,7 +207,7 @@
         // Extend to retina or beyond
         const t_ret = (rx - lx) / dx;
         const retY = hitY + dy * t_ret;
-        oc.drawRay(lx, hitY, rx, retY, '#ffd700', showAllRays ? 1 : 2, showAllRays ? 0.4 : 0.9);
+        oc.drawRay(lx, hitY, rx, retY, '#e67e00', showAllRays ? 1 : 2, showAllRays ? 0.4 : 0.9);
       }
     }
 
@@ -210,10 +215,10 @@
     ctx.beginPath();
     ctx.moveTo(rx, h / 2 - eyeH / 2 * 0.9);
     ctx.lineTo(rx, h / 2 + eyeH / 2 * 0.9);
-    ctx.strokeStyle = 'rgba(255,100,100,0.7)';
+    ctx.strokeStyle = 'rgba(200,30,30,0.7)';
     ctx.lineWidth = 3;
     ctx.stroke();
-    oc.drawLabel(rx + 14, h / 2, '網膜', 'rgba(255,100,100,0.8)', 10, 'left');
+    oc.drawLabel(rx + 14, h / 2, '網膜', 'rgba(200,30,30,0.8)', 10, 'left');
 
     // Focus spot on retina
     if (isFinite(imgX)) {
@@ -222,18 +227,18 @@
       if (focusOnRetina) {
         ctx.beginPath();
         ctx.arc(rx, imgY, 5, 0, Math.PI * 2);
-        ctx.fillStyle = '#ffd700';
+        ctx.fillStyle = '#e67e00';
         ctx.fill();
       }
     }
 
     // Lens (eye lens)
     oc.drawConvexLens(lx, h, eyeH * 0.4);
-    oc.drawLabel(lx, h / 2 - eyeH / 2 * 0.5 - 14, '水晶体', 'rgba(96,165,250,0.8)', 10);
+    oc.drawLabel(lx, h / 2 - eyeH / 2 * 0.5 - 14, '水晶体', 'rgba(37,99,235,0.8)', 10);
 
     // Source
-    oc.drawPointSource(srcX, srcY, 8, '#ffd700');
-    oc.drawLabel(srcX, srcY - 18, '光源', 'rgba(255,215,0,0.8)', 11);
+    oc.drawPointSource(srcX, srcY, 8);
+    oc.drawLabel(srcX, srcY - 18, '光源', 'rgba(200,110,0,0.85)', 11);
 
     // Info
     const retinaDist = retinaX() - lensX();

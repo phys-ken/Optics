@@ -26,11 +26,15 @@
       Optics Lab
     </a>
     <nav class="site-nav">
-      <a href="lens.html" class="nav-link">点光源</a>
+      <a href="../index.html" class="nav-link">← トップ</a>
+      <a href="lens.html" class="nav-link">レンズ</a>
       <a href="lens-object.html" class="nav-link active">物体の像</a>
       <a href="mirror.html" class="nav-link">平面鏡</a>
       <a href="concave.html" class="nav-link">凹面鏡</a>
       <a href="slits.html" class="nav-link">光線モデル</a>
+      <a href="eye.html" class="nav-link">目</a>
+      <a href="3d.html" class="nav-link">3D</a>
+      <a href="practice.html" class="nav-link">練習</a>
     </nav>
   </div>
 </header>
@@ -183,40 +187,40 @@
     if (w <= 0 || h <= 0) return;
 
     oc.drawBackground();
-    oc.drawGrid(Math.floor(w / 20), 'rgba(255,255,255,0.025)');
+    oc.drawGrid(Math.floor(w / 20));
     oc.drawAxis();
 
     const lx = lensX();
     const f = focalLen();
 
-    oc.drawFocusPoint(lx + f, h / 2, '#fbbf24', 'F');
-    oc.drawFocusPoint(lx - f, h / 2, '#fbbf24', 'F');
+    oc.drawFocusPoint(lx + f, h / 2);
+    oc.drawFocusPoint(lx - f, h / 2);
 
     // Object base is on axis
     const objBaseY = h / 2;
 
     // Draw rays from tip (objX, objTipY)
-    const tipResult = drawRaysFromPoint(objX, objTipY, '#ffd700', 1);
+    const tipResult = drawRaysFromPoint(objX, objTipY, '#e67e00', 1);
     // Draw rays from base (objX, objBaseY)
-    const baseResult = drawRaysFromPoint(objX, objBaseY, '#74c69d', 0.7);
+    const baseResult = drawRaysFromPoint(objX, objBaseY, '#1a8a4a', 0.7);
 
     // Draw image
     if (isFinite(tipResult.imgX) && tipResult.imgX > 0 && tipResult.imgX < w * 1.5) {
       // Image arrow from base image to tip image
-      oc.drawImageArrow(tipResult.imgX, tipResult.imgY, baseResult.imgY, 'rgba(100,200,255,0.85)', 6);
-      oc.drawLabel(tipResult.imgX + 12, tipResult.imgY, '像', 'rgba(100,200,255,0.9)', 11);
+      oc.drawImageArrow(tipResult.imgX, tipResult.imgY, baseResult.imgY, 'rgba(37,99,235,0.85)', 6);
+      oc.drawLabel(tipResult.imgX + 12, tipResult.imgY, '像', 'rgba(37,99,235,0.9)', 11);
     }
 
     // Object arrow
-    oc.drawObjectArrow(objX, objTipY, objBaseY, '#ffd700', 7);
-    oc.drawLabel(objX + 12, objTipY, '物体', 'rgba(255,215,0,0.8)', 11);
+    oc.drawObjectArrow(objX, objTipY, objBaseY, '#e67e00', 7);
+    oc.drawLabel(objX + 12, objTipY, '物体', 'rgba(200,110,0,0.85)', 11);
 
     // Label: axes
-    oc.drawLabel(objX, objBaseY + 16, '●', 'rgba(100,220,100,0.7)', 10);
+    oc.drawLabel(objX, objBaseY + 16, '●', 'rgba(22,130,74,0.7)', 10);
 
     // Lens
     oc.drawConvexLens(lx, h, h * 0.8);
-    oc.drawLabel(lx, 20, 'レンズ  f = ' + f.toFixed(0), 'rgba(96,165,250,0.8)', 11);
+    oc.drawLabel(lx, 20, 'レンズ  f = ' + f.toFixed(0), 'rgba(37,99,235,0.8)', 11);
 
     // Info
     const a = lx - objX;

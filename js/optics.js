@@ -109,14 +109,14 @@ class OpticsCanvas {
     this.ctx.clearRect(0, 0, this.w, this.h);
   }
 
-  // 背景（ダーク）
-  drawBackground(color = '#1a1a2e') {
+  // 背景（白ベース — 印刷対応）
+  drawBackground(color = '#ffffff') {
     this.ctx.fillStyle = color;
     this.ctx.fillRect(0, 0, this.w, this.h);
   }
 
   // グリッドライン
-  drawGrid(spacing = 40, color = 'rgba(255,255,255,0.04)') {
+  drawGrid(spacing = 40, color = 'rgba(0,0,0,0.06)') {
     const { ctx, w, h } = this;
     ctx.strokeStyle = color;
     ctx.lineWidth = 1;
@@ -131,7 +131,7 @@ class OpticsCanvas {
   }
 
   // 光軸
-  drawAxis(color = 'rgba(255,255,255,0.2)') {
+  drawAxis(color = 'rgba(0,0,0,0.25)') {
     const { ctx, w, h } = this;
     ctx.strokeStyle = color;
     ctx.lineWidth = 1;
@@ -144,12 +144,12 @@ class OpticsCanvas {
   }
 
   // 点光源
-  drawPointSource(x, y, r = 10, color = '#ffd700') {
+  drawPointSource(x, y, r = 10, color = '#e67e00') {
     const { ctx } = this;
     // グロー効果
     const grd = ctx.createRadialGradient(x, y, 0, x, y, r * 3);
     grd.addColorStop(0, color);
-    grd.addColorStop(0.4, color + 'aa');
+    grd.addColorStop(0.4, color + '55');
     grd.addColorStop(1, 'transparent');
     ctx.beginPath();
     ctx.arc(x, y, r * 3, 0, Math.PI * 2);
@@ -163,7 +163,7 @@ class OpticsCanvas {
   }
 
   // 矢印つき物体（光源として）
-  drawObjectArrow(x, tipY, baseY, color = '#ffd700', r = 6) {
+  drawObjectArrow(x, tipY, baseY, color = '#e67e00', r = 6) {
     const { ctx } = this;
     const midY = (tipY + baseY) / 2;
     // 矢印の軸
@@ -181,9 +181,9 @@ class OpticsCanvas {
     ctx.lineTo(x + r, tipY + r * 2);
     ctx.closePath();
     ctx.fill();
-    // グロー
+    // グロー（白背景では控えめに）
     const grd = ctx.createRadialGradient(x, midY, 0, x, midY, r * 5);
-    grd.addColorStop(0, color + '33');
+    grd.addColorStop(0, color + '18');
     grd.addColorStop(1, 'transparent');
     ctx.beginPath();
     ctx.arc(x, midY, r * 5, 0, Math.PI * 2);
@@ -192,7 +192,7 @@ class OpticsCanvas {
   }
 
   // 凸レンズ
-  drawConvexLens(x, h, color = '#60a5fa', lensH = null) {
+  drawConvexLens(x, h, color = '#2563eb', lensH = null) {
     const { ctx } = this;
     const lh = lensH || h * 0.5;
     const top = (h - lh) / 2;
@@ -231,7 +231,7 @@ class OpticsCanvas {
   }
 
   // 平面鏡
-  drawPlainMirror(x, h, color = '#94a3b8') {
+  drawPlainMirror(x, h, color = '#475569') {
     const { ctx } = this;
     const padding = h * 0.1;
     // 反射面
@@ -253,7 +253,7 @@ class OpticsCanvas {
   }
 
   // 凹面鏡（放物線）
-  drawConcaveMirror(x, h, f, color = '#94a3b8') {
+  drawConcaveMirror(x, h, f, color = '#475569') {
     const { ctx } = this;
     const R = f * 2; // 曲率半径
     const mirrorH = h * 0.6;
@@ -291,7 +291,7 @@ class OpticsCanvas {
   }
 
   // スリット
-  drawSlit(x, h, holeTop, holeBot, color = '#64748b') {
+  drawSlit(x, h, holeTop, holeBot, color = '#334155') {
     const { ctx } = this;
     ctx.fillStyle = color;
     ctx.fillRect(x - 4, 0, 8, holeTop);
@@ -299,7 +299,7 @@ class OpticsCanvas {
   }
 
   // スクリーン
-  drawScreen(x, h, color = '#334155') {
+  drawScreen(x, h, color = '#475569') {
     const { ctx } = this;
     ctx.fillStyle = color;
     ctx.fillRect(x, 0, 8, h);
@@ -308,7 +308,7 @@ class OpticsCanvas {
   }
 
   // 焦点マーカー
-  drawFocusPoint(x, y, color = '#fbbf24', label = 'F') {
+  drawFocusPoint(x, y, color = '#dc2626', label = 'F') {
     const { ctx } = this;
     const r = 5;
     ctx.beginPath();
@@ -323,7 +323,7 @@ class OpticsCanvas {
   }
 
   // 寸法線（距離ラベル）
-  drawDimensionLine(x1, x2, y, label, color = 'rgba(255,255,255,0.4)') {
+  drawDimensionLine(x1, x2, y, label, color = 'rgba(0,0,0,0.4)') {
     const { ctx } = this;
     ctx.strokeStyle = color;
     ctx.lineWidth = 1;
@@ -340,7 +340,7 @@ class OpticsCanvas {
   }
 
   // 光線（単純な線）
-  drawRay(x1, y1, x2, y2, color = '#ffd700', width = 1.5, alpha = 1) {
+  drawRay(x1, y1, x2, y2, color = '#e67e00', width = 1.5, alpha = 1) {
     const { ctx } = this;
     ctx.globalAlpha = alpha;
     ctx.strokeStyle = color;
@@ -353,7 +353,7 @@ class OpticsCanvas {
   }
 
   // 仮想延長線（点線）
-  drawVirtualRay(x1, y1, x2, y2, color = 'rgba(255,100,100,0.5)', width = 1.5) {
+  drawVirtualRay(x1, y1, x2, y2, color = 'rgba(200,30,30,0.5)', width = 1.5) {
     const { ctx } = this;
     ctx.strokeStyle = color;
     ctx.lineWidth = width;
@@ -366,12 +366,12 @@ class OpticsCanvas {
   }
 
   // 像（半透明の矢印）
-  drawImageArrow(x, tipY, baseY, color = 'rgba(100,200,255,0.7)', r = 5) {
+  drawImageArrow(x, tipY, baseY, color = 'rgba(37,99,235,0.75)', r = 5) {
     this.drawObjectArrow(x, tipY, baseY, color, r);
   }
 
   // テキストラベル
-  drawLabel(x, y, text, color = 'rgba(255,255,255,0.6)', fontSize = 12, align = 'center') {
+  drawLabel(x, y, text, color = 'rgba(0,0,0,0.65)', fontSize = 12, align = 'center') {
     const { ctx } = this;
     ctx.fillStyle = color;
     ctx.font = `bold ${fontSize}px monospace`;

@@ -19,8 +19,14 @@
     </a>
     <nav class="site-nav">
       <a href="../index.html" class="nav-link">← トップ</a>
-      <a href="lens.html" class="nav-link">通常レンズ</a>
-      <a href="lens-wide.html" class="nav-link active">可変絞り</a>
+      <a href="lens.html" class="nav-link">レンズ</a>
+      <a href="lens-object.html" class="nav-link">物体の像</a>
+      <a href="mirror.html" class="nav-link">平面鏡</a>
+      <a href="concave.html" class="nav-link">凹面鏡</a>
+      <a href="slits.html" class="nav-link">光線モデル</a>
+      <a href="eye.html" class="nav-link">目</a>
+      <a href="3d.html" class="nav-link">3D</a>
+      <a href="practice.html" class="nav-link">練習</a>
     </nav>
   </div>
 </header>
@@ -182,7 +188,7 @@
 
     // Aperture "stops" (blocked region overlay)
     if (state.blocked) {
-      ctx.fillStyle = 'rgba(30,30,60,0.85)';
+      ctx.fillStyle = 'rgba(0,0,0,0.08)';
       // Top block
       ctx.fillRect(CX - 6, CY - 100, 12, 100 - aperture);
       // Bottom block
@@ -190,7 +196,7 @@
     }
 
     // Aperture boundary lines
-    ctx.strokeStyle = '#60a5fa';
+    ctx.strokeStyle = '#2563eb';
     ctx.lineWidth = 1;
     ctx.setLineDash([3, 4]);
     ctx.beginPath(); ctx.moveTo(CX - 4, CY - aperture); ctx.lineTo(CX + 4, CY - aperture); ctx.stroke();
@@ -229,10 +235,10 @@
 
       const blocked = Math.abs(lensHitY - CY) > aperture;
       const opacity = blocked ? 0.08 : 0.5;
-      const color = blocked ? '#334155' : '#fcd34d';
+      const color = blocked ? '#94a3b8' : '#e67e00';
 
       // Draw ray from object to lens
-      ctx.strokeStyle = blocked ? 'rgba(50,60,90,0.3)' : `rgba(252,211,77,${opacity})`;
+      ctx.strokeStyle = blocked ? 'rgba(148,163,184,0.3)' : `rgba(230,126,0,${opacity})`;
       ctx.lineWidth = 1;
       ctx.setLineDash(blocked ? [2, 4] : []);
       ctx.beginPath();
@@ -243,7 +249,7 @@
       if (!blocked && b > 0 && imgX > 0 && imgX < W) {
         // Real image: extend beyond lens to image
         ctx.setLineDash([]);
-        ctx.strokeStyle = `rgba(252,211,77,${opacity})`;
+        ctx.strokeStyle = `rgba(230,126,0,${opacity})`;
         ctx.beginPath();
         ctx.moveTo(lensHitX, lensHitY);
         ctx.lineTo(imgX, imgY);
@@ -252,7 +258,7 @@
         const extDir = new DOMPoint(imgX - lensHitX, imgY - lensHitY);
         const extLen = Math.sqrt(extDir.x**2 + extDir.y**2);
         const ux = extDir.x / extLen, uy = extDir.y / extLen;
-        ctx.strokeStyle = `rgba(252,211,77,0.15)`;
+        ctx.strokeStyle = `rgba(230,126,0,0.15)`;
         ctx.beginPath();
         ctx.moveTo(imgX, imgY);
         ctx.lineTo(imgX + ux * 60, imgY + uy * 60);
@@ -260,7 +266,7 @@
       } else if (!blocked) {
         // Virtual image: virtual rays
         ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = `rgba(167,139,250,0.4)`;
+        ctx.strokeStyle = `rgba(120,60,200,0.4)`;
         ctx.beginPath();
         ctx.moveTo(lensHitX, lensHitY);
         ctx.lineTo(imgX, imgY);

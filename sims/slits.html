@@ -50,11 +50,15 @@
       Optics Lab
     </a>
     <nav class="site-nav">
+      <a href="../index.html" class="nav-link">← トップ</a>
       <a href="lens.html" class="nav-link">レンズ</a>
+      <a href="lens-object.html" class="nav-link">物体の像</a>
       <a href="mirror.html" class="nav-link">平面鏡</a>
+      <a href="concave.html" class="nav-link">凹面鏡</a>
       <a href="slits.html" class="nav-link active">光線モデル</a>
       <a href="eye.html" class="nav-link">目</a>
       <a href="3d.html" class="nav-link">3D</a>
+      <a href="practice.html" class="nav-link">練習</a>
     </nav>
   </div>
 </header>
@@ -202,38 +206,38 @@
     const w = oc.width, h = oc.height;
     if (w <= 0 || h <= 0) return;
 
-    oc.drawBackground('#0d0d1a');
-    oc.drawGrid(Math.floor(w / 20), 'rgba(255,255,255,0.02)');
+    oc.drawBackground();
+    oc.drawGrid(Math.floor(w / 20));
 
     const slx = slitX();
     const scX = screenX();
     const slH = slitSize();
 
     // Draw slit barrier
-    oc.drawSlit(slx, h, h / 2 - slH / 2, h / 2 + slH / 2, '#334155');
+    oc.drawSlit(slx, h, h / 2 - slH / 2, h / 2 + slH / 2);
 
     // Draw screen
     oc.drawScreen(scX, h);
-    oc.drawLabel(scX + 10, 18, 'スクリーン', 'rgba(255,255,255,0.4)', 10, 'left');
+    oc.drawLabel(scX + 10, 18, 'スクリーン', 'rgba(0,0,0,0.4)', 10, 'left');
 
     // Draw rays
     if (simMode === 1) {
-      drawOneSource(srcX, srcY, '#ffd700');
-      oc.drawPointSource(srcX, srcY, 9, '#ffd700');
-      oc.drawLabel(srcX, srcY - 20, '光源', 'rgba(255,215,0,0.8)', 11);
+      drawOneSource(srcX, srcY, '#e67e00');
+      oc.drawPointSource(srcX, srcY, 9);
+      oc.drawLabel(srcX, srcY - 20, '光源', 'rgba(200,110,0,0.85)', 11);
     } else {
       // 2 light sources
       const src2Y = srcY + h * 0.3;
-      drawOneSource(srcX, srcY, '#ffd700');
-      drawOneSource(srcX, src2Y, '#ff6b6b');
-      oc.drawPointSource(srcX, srcY, 9, '#ffd700');
-      oc.drawPointSource(srcX, src2Y, 9, '#ff6b6b');
-      oc.drawLabel(srcX - 14, srcY - 14, '光源①', 'rgba(255,215,0,0.8)', 10, 'right');
-      oc.drawLabel(srcX - 14, src2Y + 18, '光源②', 'rgba(255,100,100,0.8)', 10, 'right');
+      drawOneSource(srcX, srcY, '#e67e00');
+      drawOneSource(srcX, src2Y, '#c83232');
+      oc.drawPointSource(srcX, srcY, 9);
+      oc.drawPointSource(srcX, src2Y, 9, '#c83232');
+      oc.drawLabel(srcX - 14, srcY - 14, '光源①', 'rgba(200,110,0,0.85)', 10, 'right');
+      oc.drawLabel(srcX - 14, src2Y + 18, '光源②', 'rgba(200,50,50,0.85)', 10, 'right');
     }
 
     // Slit label
-    oc.drawLabel(slx, h / 2 - slH / 2 - 12, 'スリット', 'rgba(255,255,255,0.4)', 10);
+    oc.drawLabel(slx, h / 2 - slH / 2 - 12, 'スリット', 'rgba(0,0,0,0.4)', 10);
   }
 
   cvs.addEventListener('mousemove', e => {

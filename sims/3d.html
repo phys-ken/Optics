@@ -6,7 +6,7 @@
   <title>3D光線モデル — Optics Lab</title>
   <link rel="stylesheet" href="../css/main.css">
   <style>
-    html, body { height: 100%; overflow: hidden; background: #0a0a14; }
+    html, body { height: 100%; overflow: hidden; background: #f5f5f5; }
 
     #canvas3d {
       display: block;
@@ -17,7 +17,7 @@
     .sim-canvas-wrap {
       position: relative;
       flex: 1;
-      background: #0a0a14;
+      background: #f5f5f5;
       overflow: hidden;
     }
 
@@ -33,13 +33,13 @@
       position: absolute;
       top: var(--space-3);
       right: var(--space-4);
-      background: rgba(0,0,0,0.6);
-      color: rgba(255,255,255,0.8);
+      background: rgba(0,0,0,0.55);
+      color: rgba(255,255,255,0.9);
       font-size: var(--font-size-xs);
       padding: var(--space-1) var(--space-3);
       border-radius: 100px;
       backdrop-filter: blur(4px);
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(0,0,0,0.1);
       pointer-events: none;
     }
 
@@ -85,8 +85,13 @@
     <nav class="site-nav">
       <a href="../index.html" class="nav-link">← トップ</a>
       <a href="lens.html" class="nav-link">レンズ</a>
+      <a href="lens-object.html" class="nav-link">物体の像</a>
+      <a href="mirror.html" class="nav-link">平面鏡</a>
+      <a href="concave.html" class="nav-link">凹面鏡</a>
       <a href="slits.html" class="nav-link">光線モデル</a>
+      <a href="eye.html" class="nav-link">目</a>
       <a href="3d.html" class="nav-link active">3D</a>
+      <a href="practice.html" class="nav-link">練習</a>
     </nav>
   </div>
 </header>
@@ -218,8 +223,8 @@
 
   // Scene setup
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0a0a14);
-  scene.fog = new THREE.FogExp2(0x0a0a14, 0.06);
+  scene.background = new THREE.Color(0xf0f0f0);
+  scene.fog = new THREE.FogExp2(0xf0f0f0, 0.04);
 
   const camera = new THREE.PerspectiveCamera(50, wrap.clientWidth / wrap.clientHeight, 0.1, 100);
   camera.position.set(6, 5, 8);
@@ -247,11 +252,11 @@
   controls.maxDistance = 25;
 
   // Lights
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
   scene.add(ambientLight);
 
   // ---- Helper: Grid & Axes ----
-  const gridHelper = new THREE.GridHelper(12, 24, 0x333355, 0x1e1e3a);
+  const gridHelper = new THREE.GridHelper(12, 24, 0xaaaaaa, 0xdddddd);
   scene.add(gridHelper);
 
   const axesHelper = new THREE.AxesHelper(4);
@@ -259,10 +264,10 @@
 
   // ---- Materials ----
   const RAY_MATERIAL = new THREE.LineBasicMaterial({
-    color: 0xffd700, transparent: true, opacity: 0.18, depthWrite: false
+    color: 0xe67e00, transparent: true, opacity: 0.3, depthWrite: false
   });
   const RAY_MATERIAL_HIGHLIGHT = new THREE.LineBasicMaterial({
-    color: 0xffee88, transparent: true, opacity: 0.6, depthWrite: false
+    color: 0xcc6600, transparent: true, opacity: 0.7, depthWrite: false
   });
 
   // ---- Scene Objects ----
@@ -324,7 +329,7 @@
     mesh.position.set(0, h / 2 - 2, posZ);
     // Edge wireframe
     const edges = new THREE.EdgesGeometry(geo);
-    const edgeMat = new THREE.LineBasicMaterial({ color: 0x60a5fa, opacity: 0.4, transparent: true });
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0x2563eb, opacity: 0.4, transparent: true });
     const wireframe = new THREE.LineSegments(edges, edgeMat);
     mesh.add(wireframe);
     return mesh;
@@ -464,7 +469,7 @@
     const srcPos = new THREE.Vector3(srcX, state.srcY, 0);
 
     // Light source
-    lightSource = makeGlowSphere(0xffd700, 0.12, srcPos);
+    lightSource = makeGlowSphere(0xe67e00, 0.12, srcPos);
     scene.add(lightSource);
 
     // Barrier
@@ -498,9 +503,9 @@
     const src1 = new THREE.Vector3(-3, state.srcY + 0.8, 0);
     const src2 = new THREE.Vector3(-3, state.srcY - 0.8, 0);
 
-    lightSource = makeGlowSphere(0xffd700, 0.1, src1);
+    lightSource = makeGlowSphere(0xe67e00, 0.1, src1);
     scene.add(lightSource);
-    const ls2 = makeGlowSphere(0xff6b6b, 0.1, src2);
+    const ls2 = makeGlowSphere(0xc83232, 0.1, src2);
     scene.add(ls2);
 
     const barrier = makeBarrierWithTriangleHole(bz);
@@ -513,8 +518,8 @@
 
     const rays1 = generateRaysThroughTriangle(src1, bz, state.rayCount / 2);
     const rays2 = generateRaysThroughTriangle(src2, bz, state.rayCount / 2);
-    const rg1 = buildRayLines(rays1, 10, new THREE.LineBasicMaterial({ color: 0xffd700, transparent: true }), 0.2);
-    const rg2 = buildRayLines(rays2, 10, new THREE.LineBasicMaterial({ color: 0xff6b6b, transparent: true }), 0.2);
+    const rg1 = buildRayLines(rays1, 10, new THREE.LineBasicMaterial({ color: 0xe67e00, transparent: true }), 0.3);
+    const rg2 = buildRayLines(rays2, 10, new THREE.LineBasicMaterial({ color: 0xc83232, transparent: true }), 0.3);
     rayGroup.add(rg1, rg2);
 
     document.getElementById('presetLabel').textContent = '2光源の影';
@@ -525,13 +530,13 @@
     const srcPos = new THREE.Vector3(-4, state.srcY, 0);
 
     // Light source
-    lightSource = makeGlowSphere(0xffd700, 0.12, srcPos);
+    lightSource = makeGlowSphere(0xe67e00, 0.12, srcPos);
     scene.add(lightSource);
 
     // Lens representation (disk)
     const lensGeo = new THREE.CircleGeometry(1.5, 48);
     const lensMat = new THREE.MeshStandardMaterial({
-      color: 0x60a5fa, transparent: true, opacity: 0.3, side: THREE.DoubleSide
+      color: 0x2563eb, transparent: true, opacity: 0.3, side: THREE.DoubleSide
     });
     const lensMesh = new THREE.Mesh(lensGeo, lensMat);
     lensMesh.rotation.y = Math.PI / 2;
@@ -540,7 +545,7 @@
 
     // Focal point
     const focalDist = 2;
-    const focalSphere = makeGlowSphere(0xfbbf24, 0.07, new THREE.Vector3(focalDist, 0, 0));
+    const focalSphere = makeGlowSphere(0xdc2626, 0.07, new THREE.Vector3(focalDist, 0, 0));
     scene.add(focalSphere);
 
     // Screen
@@ -568,7 +573,7 @@
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    const mat = new THREE.LineBasicMaterial({ color: 0xffd700, transparent: true, opacity: 0.15 });
+    const mat = new THREE.LineBasicMaterial({ color: 0xe67e00, transparent: true, opacity: 0.25 });
     rayGroup.add(new THREE.LineSegments(geo, mat));
 
     document.getElementById('presetLabel').textContent = 'レンズ集光（3D）';
@@ -577,7 +582,7 @@
   function buildCone() {
     clearScene();
     const srcPos = new THREE.Vector3(-4, state.srcY, 0);
-    lightSource = makeGlowSphere(0xffd700, 0.12, srcPos);
+    lightSource = makeGlowSphere(0xe67e00, 0.12, srcPos);
     scene.add(lightSource);
 
     // Cone of rays spreading out
@@ -596,7 +601,7 @@
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    const mat = new THREE.LineBasicMaterial({ color: 0xffd700, transparent: true, opacity: 0.12 });
+    const mat = new THREE.LineBasicMaterial({ color: 0xe67e00, transparent: true, opacity: 0.2 });
     rayGroup.add(new THREE.LineSegments(geo, mat));
 
     document.getElementById('presetLabel').textContent = '光の球面波（3D）';

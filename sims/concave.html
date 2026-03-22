@@ -26,10 +26,15 @@
       Optics Lab
     </a>
     <nav class="site-nav">
+      <a href="../index.html" class="nav-link">← トップ</a>
       <a href="lens.html" class="nav-link">レンズ</a>
+      <a href="lens-object.html" class="nav-link">物体の像</a>
       <a href="mirror.html" class="nav-link">平面鏡</a>
       <a href="concave.html" class="nav-link active">凹面鏡</a>
       <a href="slits.html" class="nav-link">光線モデル</a>
+      <a href="eye.html" class="nav-link">目</a>
+      <a href="3d.html" class="nav-link">3D</a>
+      <a href="practice.html" class="nav-link">練習</a>
     </nav>
   </div>
 </header>
@@ -152,8 +157,8 @@
     const w = oc.width, h = oc.height;
     if (w <= 0 || h <= 0) return;
 
-    oc.drawBackground('#1a1a2e');
-    oc.drawGrid(Math.floor(w / 20), 'rgba(255,255,255,0.03)');
+    oc.drawBackground();
+    oc.drawGrid(Math.floor(w / 20));
     oc.drawAxis();
 
     const mx = mirrorX();
@@ -169,8 +174,8 @@
     const imgY = h / 2 - m * srcOff;
 
     // Focal point
-    oc.drawFocusPoint(mx - f, h / 2, '#fbbf24', 'F');
-    oc.drawLabel(mx - R, h / 2 + 18, 'C', 'rgba(251,191,36,0.7)', 11); // center of curvature
+    oc.drawFocusPoint(mx - f, h / 2);
+    oc.drawLabel(mx - R, h / 2 + 18, 'C', 'rgba(200,30,30,0.7)', 11); // center of curvature
 
     // Draw reflected rays
     const mirrorH = h * 0.6;
@@ -188,7 +193,7 @@
       const hitX = mx - dy * dy / (2 * R);
 
       // Incident ray: source to mirror hit
-      oc.drawRay(srcX, srcY, hitX, hitY, '#ffd700', showAllRays ? 1 : 2, showAllRays ? 0.5 : 1);
+      oc.drawRay(srcX, srcY, hitX, hitY, '#e67e00', showAllRays ? 1 : 2, showAllRays ? 0.5 : 1);
 
       // Reflected ray: using mirror equation
       if (isFinite(imgX)) {
@@ -197,35 +202,35 @@
         const L = Math.sqrt(rdx * rdx + rdy * rdy);
         const extend = w * 2;
         oc.drawRay(hitX, hitY, hitX + rdx * extend / L, hitY + rdy * extend / L,
-          '#ffd700', showAllRays ? 1 : 2, showAllRays ? 0.5 : 1);
+          '#e67e00', showAllRays ? 1 : 2, showAllRays ? 0.5 : 1);
       }
     }
 
     // Image
     if (isFinite(imgX) && imgX > 0 && imgX < mx) {
       if (b > 0) {
-        oc.drawPointSource(imgX, imgY, 8, 'rgba(100,200,255,0.8)');
-        oc.drawLabel(imgX, imgY - 15, '像', 'rgba(100,200,255,0.9)', 11);
+        oc.drawPointSource(imgX, imgY, 8, 'rgba(37,99,235,0.8)');
+        oc.drawLabel(imgX, imgY - 15, '像', 'rgba(37,99,235,0.9)', 11);
       } else {
         const ctx = oc.ctx;
         ctx.beginPath();
         ctx.arc(imgX, imgY, 8, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(100,200,255,0.6)';
+        ctx.strokeStyle = 'rgba(37,99,235,0.6)';
         ctx.lineWidth = 2;
         ctx.setLineDash([4, 3]);
         ctx.stroke();
         ctx.setLineDash([]);
-        oc.drawLabel(imgX, imgY - 15, '虚像', 'rgba(100,200,255,0.7)', 11);
+        oc.drawLabel(imgX, imgY - 15, '虚像', 'rgba(37,99,235,0.7)', 11);
       }
     }
 
     // Mirror
-    oc.drawConcaveMirror(mx, h, f, '#94a3b8');
-    oc.drawLabel(mx + 16, 22, '凹面鏡', 'rgba(148,163,184,0.9)', 11);
+    oc.drawConcaveMirror(mx, h, f);
+    oc.drawLabel(mx + 16, 22, '凹面鏡', 'rgba(71,85,105,0.9)', 11);
 
     // Source
-    oc.drawPointSource(srcX, srcY, 9, '#ffd700');
-    oc.drawLabel(srcX, srcY - 20, '光源', 'rgba(255,215,0,0.8)', 11);
+    oc.drawPointSource(srcX, srcY, 9);
+    oc.drawLabel(srcX, srcY - 20, '光源', 'rgba(200,110,0,0.85)', 11);
 
     // Info
     UI.updateInfo({

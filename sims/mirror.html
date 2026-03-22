@@ -26,10 +26,15 @@
       Optics Lab
     </a>
     <nav class="site-nav">
+      <a href="../index.html" class="nav-link">← トップ</a>
       <a href="lens.html" class="nav-link">レンズ</a>
+      <a href="lens-object.html" class="nav-link">物体の像</a>
       <a href="mirror.html" class="nav-link active">平面鏡</a>
       <a href="concave.html" class="nav-link">凹面鏡</a>
       <a href="slits.html" class="nav-link">光線モデル</a>
+      <a href="eye.html" class="nav-link">目</a>
+      <a href="3d.html" class="nav-link">3D</a>
+      <a href="practice.html" class="nav-link">練習</a>
     </nav>
   </div>
 </header>
@@ -139,8 +144,8 @@
     const w = oc.width, h = oc.height;
     if (w <= 0 || h <= 0) return;
 
-    oc.drawBackground('#1a1a2e');
-    oc.drawGrid(Math.floor(w / 20), 'rgba(255,255,255,0.03)');
+    oc.drawBackground();
+    oc.drawGrid(Math.floor(w / 20));
 
     const mx = mirrorX();
     // Virtual image: symmetric across mirror
@@ -149,8 +154,8 @@
 
     // Mirror
     if (!hideMirror) {
-      oc.drawPlainMirror(mx, h, '#94a3b8');
-      oc.drawLabel(mx + 18, 22, '鏡', 'rgba(148,163,184,0.9)', 11);
+      oc.drawPlainMirror(mx, h);
+      oc.drawLabel(mx + 18, 22, '鏡', 'rgba(71,85,105,0.9)', 11);
     }
 
     // Draw reflected rays
@@ -162,7 +167,7 @@
       if (hitY < 0 || hitY > h) continue;
 
       // Incident ray
-      oc.drawRay(srcX, srcY, mx, hitY, '#ffd700', showAllRays ? 1 : 2, showAllRays ? 0.45 : 1);
+      oc.drawRay(srcX, srcY, mx, hitY, '#e67e00', showAllRays ? 1 : 2, showAllRays ? 0.45 : 1);
       // Reflected ray: reflect about mirror (vertical line)
       const dx = srcX - mx; // direction from mirror to source
       const dy = srcY - hitY;
@@ -170,7 +175,7 @@
       // reflect: x-flip
       const rdx = -dx, rdy = dy; // reflected direction normalised
       const scale = w;
-      oc.drawRay(mx, hitY, mx - rdx * scale / L, hitY + rdy * scale / L, '#ffd700', showAllRays ? 1 : 2, showAllRays ? 0.45 : 1);
+      oc.drawRay(mx, hitY, mx - rdx * scale / L, hitY + rdy * scale / L, '#e67e00', showAllRays ? 1 : 2, showAllRays ? 0.45 : 1);
     }
 
     // Construction: virtual image and dashed rays behind mirror
@@ -179,24 +184,24 @@
       for (let i = 0; i <= 5; i++) {
         const t = (i / 5) - 0.5;
         const hitY = h / 2 + spread * 0.5 * t;
-        oc.drawVirtualRay(mx, hitY, imgX, imgY, 'rgba(100,200,255,0.3)', 1.5);
+        oc.drawVirtualRay(mx, hitY, imgX, imgY, 'rgba(37,99,235,0.3)', 1.5);
       }
       // Virtual image marker
       const ctx = oc.ctx;
       ctx.beginPath();
       ctx.arc(imgX, imgY, 9, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(100,200,255,0.6)';
+      ctx.strokeStyle = 'rgba(37,99,235,0.6)';
       ctx.lineWidth = 2;
       ctx.setLineDash([4, 3]);
       ctx.stroke();
       ctx.setLineDash([]);
-      oc.drawLabel(imgX + 14, imgY, '虚像', 'rgba(100,200,255,0.8)', 11);
+      oc.drawLabel(imgX + 14, imgY, '虚像', 'rgba(37,99,235,0.8)', 11);
     }
 
     // Source
     if (!hideMirror) {
-      oc.drawPointSource(srcX, srcY, 9, '#ffd700');
-      oc.drawLabel(srcX, srcY - 20, '光源', 'rgba(255,215,0,0.8)', 11);
+      oc.drawPointSource(srcX, srcY, 9);
+      oc.drawLabel(srcX, srcY - 20, '光源', 'rgba(200,110,0,0.85)', 11);
     }
 
     // Info
