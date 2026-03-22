@@ -136,5 +136,34 @@ PASS  Cleaned: eye.html
 PASS  Cleaned: tutorial2_1slit.html
 PASS  Cleaned: tutorial2_2lights.html
 PASS  Cleaned: README.html
+PASS  optics.js: syntax OK
+PASS  index.html inline script[0]: syntax OK
+PASS  3d.html inline script[0]: syntax OK
+PASS  concave.html inline script[0]: syntax OK
+PASS  eye.html inline script[0]: syntax OK
+PASS  lens-object.html inline script[0]: syntax OK
+PASS  lens-wide.html inline script[0]: syntax OK
+PASS  lens.html inline script[0]: syntax OK
+PASS  mirror.html inline script[0]: syntax OK
+PASS  practice.html inline script[0]: syntax OK
+PASS  slits.html inline script[0]: syntax OK
+PASS  CDN OK (200): ...https://github.com/phys-ken/Optics
+PASS  index.html: drawConvexLens uses default color
+PASS  index.html: drawConvexLens uses default color
+PASS  eye.html: drawConvexLens uses default color
+PASS  lens-object.html: drawConvexLens uses default color
+PASS  lens-wide.html: drawConvexLens uses default color
+PASS  lens.html: drawConvexLens uses default color
+PASS  optics.js: no raw hex-append patterns
+PASS  index.html: no ES modules (classic script)
+PASS  3d.html: importmap + module script OK
+PASS  concave.html: no ES modules (classic script)
+PASS  eye.html: no ES modules (classic script)
+PASS  lens-object.html: no ES modules (classic script)
+PASS  lens-wide.html: no ES modules (classic script)
+PASS  lens.html: no ES modules (classic script)
+PASS  mirror.html: no ES modules (classic script)
+PASS  practice.html: no ES modules (classic script)
+PASS  slits.html: no ES modules (classic script)
 
-PASS=138 WARN=0 FAIL=0
+PASS=167 WARN=0 FAIL=0

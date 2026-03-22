@@ -184,7 +184,7 @@
     if (state.showConstruction) OC.drawAxis();
 
     // Lens (with aperture indicator)
-    OC.drawConvexLens(CX, CY, aperture, 12);
+    OC.drawConvexLens(CX, H, 2 * aperture);
 
     // Aperture "stops" (blocked region overlay)
     if (state.blocked) {

@@ -205,6 +205,157 @@ for f in old_names:
         ok(f"Cleaned: {f}")
 
 # ─────────────────────────────────────────────────────────────
+# 13. JavaScript syntax check (node --check)
+# ─────────────────────────────────────────────────────────────
+section("13. JavaScript syntax check")
+import shutil, subprocess, tempfile
+
+node_bin = shutil.which("node")
+if node_bin:
+    # Check standalone JS files
+    for js_file in (ROOT / "js").glob("*.js"):
+        r = subprocess.run([node_bin, "--check", str(js_file)],
+                           capture_output=True, text=True)
+        if r.returncode == 0:
+            ok(f"{js_file.name}: syntax OK")
+        else:
+            fail(f"{js_file.name}: syntax error -> {r.stderr.strip()[:120]}")
+
+    # Extract and check inline <script> from each HTML page
+    SCRIPT_RE = re.compile(
+        r'<script(?:\s+type="module")?\s*>(.*?)</script>',
+        re.DOTALL
+    )
+    for pg in sorted(pages):
+        content = read(pg)
+        for i, m in enumerate(SCRIPT_RE.finditer(content)):
+            snippet = m.group(1).strip()
+            if not snippet or len(snippet) < 20:
+                continue
+            # Strip ES module imports (node --check can't resolve them)
+            clean = re.sub(r'^\s*import\s+.*?;\s*$', '', snippet, flags=re.MULTILINE)
+            # Wrap in async function for top-level await support
+            wrapped = f"(async function(){{ {clean} }});"
+            with tempfile.NamedTemporaryFile(
+                suffix=".js", mode="w", encoding="utf-8", delete=False
+            ) as tmp:
+                tmp.write(wrapped)
+                tmp_path = tmp.name
+            try:
+                r = subprocess.run([node_bin, "--check", tmp_path],
+                                   capture_output=True, text=True)
+                if r.returncode == 0:
+                    ok(f"{pg.name} inline script[{i}]: syntax OK")
+                else:
+                    # Extract the useful part of the error
+                    err = r.stderr.strip().split("\n")
+                    # Filter out the temp filename
+                    short = [l for l in err if "SyntaxError" in l or "Unexpected" in l]
+                    msg = short[0][:100] if short else err[-1][:100] if err else "unknown error"
+                    fail(f"{pg.name} inline script[{i}]: {msg}")
+            finally:
+                os.unlink(tmp_path)
+else:
+    warn("node not found, skipping JS syntax checks")
+
+# ─────────────────────────────────────────────────────────────
+# 14. CDN URL validation
+# ─────────────────────────────────────────────────────────────
+section("14. CDN / external URL check")
+import urllib.request, urllib.error
+
+CDN_RE = re.compile(r'(?:src|href)="(https://[^"]+)"')
+checked_urls = set()
+for pg in sorted(pages):
+    content = read(pg)
+    for m in CDN_RE.finditer(content):
+        url = m.group(1)
+        if url in checked_urls:
+            continue
+        checked_urls.add(url)
+        try:
+            req = urllib.request.Request(url, method="HEAD",
+                  headers={"User-Agent": "OpticsLabTest/1.0"})
+            resp = urllib.request.urlopen(req, timeout=8)
+            ok(f"CDN OK ({resp.status}): ...{url[-60:]}")
+        except urllib.error.HTTPError as e:
+            fail(f"CDN {e.code}: {url}")
+        except Exception as e:
+            warn(f"CDN unreachable: {url} ({e})")
+
+# ─────────────────────────────────────────────────────────────
+# 15. drawConvexLens call-site validation
+# ─────────────────────────────────────────────────────────────
+section("15. drawConvexLens() call-site check")
+# Verify no call passes a bare integer/number as the color (4th) argument
+LENS_CALL_RE = re.compile(
+    r'\.drawConvexLens\(\s*([^)]+)\)'
+)
+for pg in sorted(pages):
+    content = read(pg)
+    for m in LENS_CALL_RE.finditer(content):
+        args_str = m.group(1)
+        # Split on commas, ignoring those inside nested parens
+        args = []
+        depth = 0
+        current = ""
+        for ch in args_str:
+            if ch in "([":
+                depth += 1
+                current += ch
+            elif ch in ")]":
+                depth -= 1
+                current += ch
+            elif ch == "," and depth == 0:
+                args.append(current.strip())
+                current = ""
+            else:
+                current += ch
+        if current.strip():
+            args.append(current.strip())
+
+        # 4th arg (index 3) is color — should be a string or absent
+        if len(args) >= 4:
+            color_arg = args[3]
+            if re.match(r'^\d+(\.\d+)?$', color_arg):
+                fail(f"{pg.name}: drawConvexLens 4th arg is numeric literal '{color_arg}' (should be color string)")
+            else:
+                ok(f"{pg.name}: drawConvexLens color arg OK")
+        else:
+            ok(f"{pg.name}: drawConvexLens uses default color")
+
+# ─────────────────────────────────────────────────────────────
+# 16. _applyAlpha safety: no raw hex-append patterns
+# ─────────────────────────────────────────────────────────────
+section("16. No raw hex-append patterns (color + 'XX')")
+HEX_APPEND_RE = re.compile(r"""color\s*\+\s*['"][0-9a-fA-F]{2}['"]""")
+for js_file in (ROOT / "js").glob("*.js"):
+    content = read(js_file)
+    matches = HEX_APPEND_RE.findall(content)
+    if matches:
+        fail(f"{js_file.name}: raw hex-append found: {matches[:3]}")
+    else:
+        ok(f"{js_file.name}: no raw hex-append patterns")
+
+# ─────────────────────────────────────────────────────────────
+# 17. ES Module consistency
+# ─────────────────────────────────────────────────────────────
+section("17. ES Module / importmap consistency")
+for pg in sorted(pages):
+    content = read(pg)
+    has_importmap = "importmap" in content
+    has_module = 'type="module"' in content
+    has_import_stmt = re.search(r'\bimport\s+', content)
+    if has_importmap and not has_module:
+        fail(f"{pg.name}: has importmap but no type=\"module\" script")
+    elif has_import_stmt and not has_module:
+        fail(f"{pg.name}: has import statement but no type=\"module\" script")
+    elif has_importmap and has_module:
+        ok(f"{pg.name}: importmap + module script OK")
+    else:
+        ok(f"{pg.name}: no ES modules (classic script)")
+
+# ─────────────────────────────────────────────────────────────
 # Summary
 # ─────────────────────────────────────────────────────────────
 passed = sum(1 for r in results if r[0] == "PASS")

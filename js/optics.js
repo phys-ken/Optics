@@ -107,6 +107,7 @@ class OpticsCanvas {
 
   // 色にアルファを安全に適用（hex, rgba 両対応）
   _applyAlpha(color, alphaHex) {
+    if (typeof color !== 'string') return `rgba(0,0,0,${(parseInt(alphaHex,16)/255).toFixed(3)})`;
     const a = parseInt(alphaHex, 16) / 255;
     const m = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)$/);
     if (m) return `rgba(${m[1]},${m[2]},${m[3]},${a.toFixed(3)})`;
@@ -200,7 +201,7 @@ class OpticsCanvas {
   }
 
   // 凸レンズ
-  drawConvexLens(x, h, color = '#2563eb', lensH = null) {
+  drawConvexLens(x, h, lensH = null, color = '#2563eb') {
     const { ctx } = this;
     const lh = lensH || h * 0.5;
     const top = (h - lh) / 2;
