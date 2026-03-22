@@ -530,11 +530,26 @@ const UI = {
   },
 
   /**
-   * fullscreen toggle
+   * fullscreen toggle（案内トースト付き）
    */
   toggleFullscreen(el) {
     if (!document.fullscreenElement) {
       el.requestFullscreen?.();
+      // 案内トーストを一度だけ表示
+      if (!UI._fsToastShown) {
+        UI._fsToastShown = true;
+        const toast = document.createElement('div');
+        toast.textContent = 'Esc キーで全画面を解除できます';
+        Object.assign(toast.style, {
+          position: 'fixed', top: '16px', left: '50%', transform: 'translateX(-50%)',
+          background: 'rgba(0,0,0,0.75)', color: '#fff', padding: '10px 24px',
+          borderRadius: '8px', fontSize: '14px', zIndex: '99999',
+          transition: 'opacity 0.5s', pointerEvents: 'none'
+        });
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; }, 2500);
+        setTimeout(() => { toast.remove(); UI._fsToastShown = false; }, 3200);
+      }
     } else {
       document.exitFullscreen?.();
     }

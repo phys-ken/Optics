@@ -100,10 +100,10 @@
           </div>
           <div class="control-group">
             <div class="control-row">
-              <span class="control-label">スリットの高さ</span>
-              <span class="range-value" id="val-slit">33</span>
+              <span class="control-label">スリットの幅</span>
+              <span class="range-value" id="val-slit">12</span>
             </div>
-            <input type="range" id="range-slit" min="5" max="80" value="33" step="1">
+            <input type="range" id="range-slit" min="2" max="60" value="12" step="1">
           </div>
         </div>
       </div>
@@ -120,14 +120,15 @@
       <div style="font-size:var(--font-size-xs); color:var(--color-text-muted); line-height:1.7;">
         <strong>操作方法</strong><br>
         • マウス移動: 光源を動かす<br>
-        • クリック: 全光線 / 代表線 切替<br>
-        • タブ: モード切替
+        • クリック: 全光線 / スリット通過光線のみ を切替<br>
+        • タブ: モード切替<br>
+        • 作図モード全画面: Esc で戻る
       </div>
     </aside>
 
     <div class="sim-canvas-wrap">
       <canvas id="simCanvas"></canvas>
-      <div class="canvas-hint">マウスで光源を動かす | クリックで光線切替</div>
+      <div class="canvas-hint">マウスで光源を動かす | クリックでスリット通過光線のみ表示 | Esc で全画面解除</div>
     </div>
   </div>
 </div>
@@ -139,19 +140,22 @@
 
   let simMode = 1; // 1 or 2
   let srcX, srcY;
-  let showAllRays = true;
+  let src2X, src2Y; // 2光源モード: 光源②（固定）
+  let slitOnly = false; // true: スリット通過光線のみ
   let rayCount = 20;
-  let slitSizeRatio = 33; // percent of h
+  let slitSizeRatio = 12; // percent of h（狭いデフォルト）
 
   function initPositions() {
     const w = oc.width, h = oc.height;
     srcX = w * 0.18;
     srcY = h * 0.5;
+    src2X = w * 0.18;
+    src2Y = h * 0.67;
   }
   oc.onResize = () => initPositions();
   initPositions();
 
-  function slitX() { return oc.width * 0.55; }
+  function slitX() { return oc.width * 0.6; }
   function slitSize() { return oc.height * slitSizeRatio / 100; }
   function screenX() { return oc.width - oc.width / 30; }
 
@@ -161,12 +165,14 @@
     document.getElementById('tab2').classList.toggle('active', m === 2);
     document.getElementById('simTitle').textContent =
       m === 1 ? '1スリットの光線モデル' : '2光源の光線モデル';
+    slitOnly = false; // モード切替時にリセット
   }
 
   // Read URL param
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('mode') === '2') switchMode(2);
 
+  // 元シミュレーション準拠: 放射状に光線を描き、スリット判定
   function drawOneSource(sx, sy, color) {
     const w = oc.width, h = oc.height;
     const slx = slitX();
@@ -174,31 +180,32 @@
     const slTop = h / 2 - slH / 2;
     const slBot = h / 2 + slH / 2;
     const scX = screenX();
-    const numRays = showAllRays ? rayCount * 2 : 7;
+    const diag = Math.sqrt(w * w + h * h);
+    const numRays = rayCount * 2;
 
-    for (let i = 0; i <= numRays; i++) {
-      const t = numRays === 0 ? 0 : (i / numRays) - 0.5;
-      // direction toward the slit
-      const angle = Math.PI / 2 + (Math.PI / 2) * t * 1.5;
+    for (let i = 0; i < numRays; i++) {
+      const angle = Math.PI * i / numRays;
       const dx = Math.sin(angle);
       const dy = -Math.cos(angle);
 
-      // Intersection with slit plane x = slx
-      if (Math.abs(dx) < 0.001) continue;
-      const t_slit = (slx - sx) / dx;
-      const hitY = sy + dy * t_slit;
+      // スリット面での交点
+      if (Math.abs(dx) < 0.0001) continue;
+      const tSlit = (slx - sx) / dx;
+      const hitY = sy + dy * tSlit;
 
-      if (hitY >= slTop && hitY <= slBot) {
-        // passes through slit
-        oc.drawRay(sx, sy, slx, hitY, color, showAllRays ? 1 : 1.5, showAllRays ? 0.5 : 0.9);
-        // continue to screen
-        const t_screen = (scX - slx) / dx;
-        const screenY = hitY + dy * t_screen;
-        oc.drawRay(slx, hitY, scX, screenY, color, showAllRays ? 1 : 1.5, showAllRays ? 0.5 : 0.9);
-      } else {
-        // blocked
-        oc.drawRay(sx, sy, slx, hitY, color, 1, showAllRays ? 0.15 : 0.05);
+      const passes = hitY >= slTop && hitY <= slBot;
+
+      if (passes) {
+        // スリット通過: 光源→スリット→スクリーン（対角線長まで延長）
+        oc.drawRay(sx, sy, slx, hitY, color, 1.5, 0.7);
+        const endX = sx + dx * diag;
+        const endY = sy + dy * diag;
+        oc.drawRay(slx, hitY, endX, endY, color, 1.5, 0.7);
+      } else if (!slitOnly) {
+        // ブロック: スリット面で止める（同じ色・同じ太さ）
+        oc.drawRay(sx, sy, slx, hitY, color, 1.5, 0.7);
       }
+      // slitOnly=true のとき、ブロック光線は描画しない
     }
   }
 
@@ -213,37 +220,42 @@
     const scX = screenX();
     const slH = slitSize();
 
-    // Draw slit barrier
+    // スリット
     oc.drawSlit(slx, h, h / 2 - slH / 2, h / 2 + slH / 2);
 
-    // Draw screen
+    // スクリーン
     oc.drawScreen(scX, h);
     oc.drawLabel(scX + 10, 18, 'スクリーン', 'rgba(0,0,0,0.4)', 10, 'left');
 
-    // Draw rays
+    // 光線描画
     if (simMode === 1) {
       drawOneSource(srcX, srcY, '#e67e00');
       oc.drawPointSource(srcX, srcY, 9);
       oc.drawLabel(srcX, srcY - 20, '光源', 'rgba(200,110,0,0.85)', 11);
     } else {
-      // 2 light sources
-      const src2Y = srcY + h * 0.3;
+      // 2光源: 光源①はマウス追従、光源②は固定位置
       drawOneSource(srcX, srcY, '#e67e00');
-      drawOneSource(srcX, src2Y, '#c83232');
+      drawOneSource(src2X, src2Y, '#c83232');
       oc.drawPointSource(srcX, srcY, 9);
-      oc.drawPointSource(srcX, src2Y, 9, '#c83232');
+      oc.drawPointSource(src2X, src2Y, 9, '#c83232');
       oc.drawLabel(srcX - 14, srcY - 14, '光源①', 'rgba(200,110,0,0.85)', 10, 'right');
-      oc.drawLabel(srcX - 14, src2Y + 18, '光源②', 'rgba(200,50,50,0.85)', 10, 'right');
+      oc.drawLabel(src2X - 14, src2Y + 18, '光源②（固定）', 'rgba(200,50,50,0.85)', 10, 'right');
     }
 
-    // Slit label
+    // スリットラベル
     oc.drawLabel(slx, h / 2 - slH / 2 - 12, 'スリット', 'rgba(0,0,0,0.4)', 10);
+
+    // 状態表示
+    if (slitOnly) {
+      oc.drawLabel(w / 2, 20, '[ スリット通過光線のみ表示中 — クリックで全光線に戻す ]', 'rgba(0,0,0,0.35)', 11);
+    }
   }
 
   cvs.addEventListener('mousemove', e => {
     const rect = cvs.getBoundingClientRect();
     const mx = (e.clientX - rect.left) * (cvs.width / rect.width);
     const my = (e.clientY - rect.top) * (cvs.height / rect.height);
+    // 1光源: そのまま移動。2光源: 光源①だけ動かす（②は固定）
     if (mx < slitX() - 5) { srcX = mx; srcY = my; }
   });
   cvs.addEventListener('touchmove', e => {
@@ -254,7 +266,7 @@
     const my = (t.clientY - rect.top) * (cvs.height / rect.height);
     if (mx < slitX() - 5) { srcX = mx; srcY = my; }
   }, { passive: false });
-  cvs.addEventListener('click', () => { showAllRays = !showAllRays; });
+  cvs.addEventListener('click', () => { slitOnly = !slitOnly; });
 
   UI.bindRange('range-rays', 'val-rays', v => { rayCount = Math.round(v); });
   UI.bindRange('range-slit', 'val-slit', v => { slitSizeRatio = v; });
@@ -264,6 +276,13 @@
     if (m === 'sheet') document.body.classList.add('sheet-mode');
   }});
   document.getElementById('btnFullscreen').addEventListener('click', () => UI.toggleFullscreen(document.documentElement));
+
+  // ESC で全画面解除（ブラウザ標準 + キー案内）
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.fullscreenElement) {
+      document.exitFullscreen();
+    }
+  });
 
   requestAnimationFrame(function loop() { draw(); requestAnimationFrame(loop); });
 </script>
