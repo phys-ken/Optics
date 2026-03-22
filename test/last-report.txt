@@ -1,0 +1,140 @@
+PASS  Exists: css/main.css
+PASS  Exists: js/optics.js
+PASS  Exists: index.html
+PASS  Exists: sims/lens.html
+PASS  Exists: sims/lens-object.html
+PASS  Exists: sims/lens-wide.html
+PASS  Exists: sims/mirror.html
+PASS  Exists: sims/concave.html
+PASS  Exists: sims/slits.html
+PASS  Exists: sims/eye.html
+PASS  Exists: sims/3d.html
+PASS  Exists: sims/practice.html
+PASS  Exists: README.md
+PASS  _archived/ found with 19 HTML files
+PASS  3d.html: all local refs OK
+PASS  concave.html: all local refs OK
+PASS  eye.html: all local refs OK
+PASS  lens-object.html: all local refs OK
+PASS  lens-wide.html: all local refs OK
+PASS  lens.html: all local refs OK
+PASS  mirror.html: all local refs OK
+PASS  practice.html: all local refs OK
+PASS  slits.html: all local refs OK
+PASS  index.html: all local refs OK
+PASS  3d.html DOCTYPE
+PASS  3d.html viewport
+PASS  3d.html canvas
+PASS  3d.html mode-switcher
+PASS  3d.html optics.js ref
+PASS  3d.html lang="ja"
+PASS  concave.html DOCTYPE
+PASS  concave.html viewport
+PASS  concave.html canvas
+PASS  concave.html mode-switcher
+PASS  concave.html optics.js ref
+PASS  concave.html lang="ja"
+PASS  eye.html DOCTYPE
+PASS  eye.html viewport
+PASS  eye.html canvas
+PASS  eye.html mode-switcher
+PASS  eye.html optics.js ref
+PASS  eye.html lang="ja"
+PASS  lens-object.html DOCTYPE
+PASS  lens-object.html viewport
+PASS  lens-object.html canvas
+PASS  lens-object.html mode-switcher
+PASS  lens-object.html optics.js ref
+PASS  lens-object.html lang="ja"
+PASS  lens-wide.html DOCTYPE
+PASS  lens-wide.html viewport
+PASS  lens-wide.html canvas
+PASS  lens-wide.html mode-switcher
+PASS  lens-wide.html optics.js ref
+PASS  lens-wide.html lang="ja"
+PASS  lens.html DOCTYPE
+PASS  lens.html viewport
+PASS  lens.html canvas
+PASS  lens.html mode-switcher
+PASS  lens.html optics.js ref
+PASS  lens.html lang="ja"
+PASS  mirror.html DOCTYPE
+PASS  mirror.html viewport
+PASS  mirror.html canvas
+PASS  mirror.html mode-switcher
+PASS  mirror.html optics.js ref
+PASS  mirror.html lang="ja"
+PASS  practice.html DOCTYPE
+PASS  practice.html viewport
+PASS  practice.html canvas
+PASS  practice.html optics.js ref
+PASS  practice.html lang="ja"
+PASS  slits.html DOCTYPE
+PASS  slits.html viewport
+PASS  slits.html canvas
+PASS  slits.html mode-switcher
+PASS  slits.html optics.js ref
+PASS  slits.html lang="ja"
+PASS  index.html -> sims/lens.html
+PASS  index.html -> sims/mirror.html
+PASS  index.html -> sims/concave.html
+PASS  index.html -> sims/eye.html
+PASS  index.html -> sims/slits.html
+PASS  index.html -> sims/3d.html
+PASS  index.html -> sims/practice.html
+PASS  optics.js: lensEquation
+PASS  optics.js: magnification
+PASS  optics.js: imageType
+PASS  optics.js: drawBackground
+PASS  optics.js: drawAxis
+PASS  optics.js: drawConvexLens
+PASS  optics.js: drawObjectArrow
+PASS  optics.js: drawImageArrow
+PASS  optics.js: drawFocusPoint
+PASS  optics.js: drawRay
+PASS  optics.js: drawVirtualRay
+PASS  optics.js: bindRange
+PASS  optics.js: bindCheckbox
+PASS  optics.js: initModeButtons
+PASS  optics.js: toggleFullscreen
+PASS  optics.js: SimulationBase
+PASS  optics.js: OpticsCanvas
+PASS  main.css: --color-accent
+PASS  main.css: --color-bg
+PASS  main.css: --color-surface
+PASS  main.css: --font-body
+PASS  main.css: --space-4
+PASS  main.css: --radius
+PASS  main.css: teacher-mode
+PASS  main.css: sheet-mode
+PASS  main.css: @media print
+PASS  Three.js CDN
+PASS  OrbitControls
+PASS  loadPreset()
+PASS  preset shadow1
+PASS  scene.add(
+PASS  generateProblems()
+PASS  window.print
+PASS  .problem-card
+PASS  toggleAnswer()
+PASS  lensEquation call
+PASS  lens.html: uses lensEquation()
+PASS  lens-object.html: uses lensEquation()
+PASS  lens-wide.html: uses lensEquation()
+PASS  concave.html: contains lens formula notation
+PASS  practice.html: uses lensEquation()
+PASS  css/main.css: 16KB
+PASS  js/optics.js: 14KB
+PASS  sims/3d.html: 23KB
+PASS  sims/practice.html: 21KB
+PASS  sims/lens.html: 13KB
+PASS  Cleaned: Lens.html
+PASS  Cleaned: LensWide.html
+PASS  Cleaned: mirror.html
+PASS  Cleaned: concave-mirror.html
+PASS  Cleaned: eye.html
+PASS  Cleaned: tutorial2_1slit.html
+PASS  Cleaned: tutorial2_2lights.html
+PASS  Cleaned: README.html
+
+PASS=138 WARN=0 FAIL=0
