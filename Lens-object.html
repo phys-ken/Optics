@@ -250,7 +250,7 @@
             //色を指定する
             ctx.fillStyle = "black"; //塗りつぶしの色は黒  
             //左から,上から,の位置に、幅,高さ,の四角形を描く
-            ctx.fillRect(w - (w / 30), 0, w / 30, h);
+            ctx.fillRect(w - (w / 80), 0, w / 80, h);
             // 線を描画を実行
             ctx.stroke();
             //////////////////////////////////////////////////////////////スクリーン/////////////////////////////////////////////////////////////
@@ -279,27 +279,15 @@
 
 
             /////////////////////////////////////////////////////////////焦点/////////////////////////////////////////////////////////////
-            // パスをリセット
-            ctx.beginPath();
-            //色を指定する
-            ctx.fillStyle = "black"; //塗りつぶしの色は黒  
-            //左から,上から,の位置に、幅,高さ,の四角形を描く
-            blocksize = 10;
-            ctx.fillRect(slitx + f - (blocksize / 2), (h / 2) - blocksize / 2, blocksize, blocksize); //f
-            ctx.fillRect(slitx - f - (blocksize / 2), (h / 2) - blocksize / 2, blocksize, blocksize); //f
-            ctx.fillRect(slitx + 2 * f - (blocksize / 2), (h / 2) - blocksize / 2, blocksize, blocksize); //2f
-            ctx.fillRect(slitx - 2 * f - (blocksize / 2), (h / 2) - blocksize / 2, blocksize, blocksize); //2f
-            // 線を描画を実行
-            ctx.stroke();
+            var fmSz = Math.max(6, h / 50);
+            drawFocusMarker(slitx + f,     h / 2, fmSz);
+            drawFocusMarker(slitx - f,     h / 2, fmSz);
+            drawFocusMarker(slitx + 2 * f, h / 2, fmSz);
+            drawFocusMarker(slitx - 2 * f, h / 2, fmSz);
             /////////////////////////////////////////////////////////////焦点終わり///////////////////////////////////////////////////////////// 
 
             ////////////////////////////////////////////光軸
-            ctx.beginPath();     // 1.Pathで描画を開始する
-            ctx.moveTo(0, h / 2); // 2.描画する位置を指定する
-            ctx.lineTo(w, h / 2);
-            ctx.strokeStyle = "black";
-            ctx.lineWidth = 2;
-            ctx.stroke();
+            drawAxisWithArrows(2);
             ////////////光軸終わり
 
             /////////////レンズをかく////////////////////////////////

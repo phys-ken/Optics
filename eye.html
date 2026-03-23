@@ -165,24 +165,7 @@
 
 
             ///////////////////////////////////////////////////////////////////////光源/////////////////////////////////////////////////////////////////
-            // パスをリセット
-            ctx.beginPath();
-            // 円の中心座標: XY
-            // 半径: r
-            // 開始角度: 0度 (0 * Math.PI / 180)
-            // 終了角度: 360度 (360 * Math.PI / 180)
-            // 方向: true=反時計回りの円、false=時計回りの円
-            ctx.arc(X, Y, r, 0 * Math.PI / 180, 360 * Math.PI / 180, false);
-            // 塗りつぶしの色
-            ctx.fillStyle = C.source;
-            // 塗りつぶしを実行
-            ctx.fill();
-            // 線の色
-            ctx.strokeStyle = "black";
-            // 線の太さ
-            ctx.lineWidth = 3;
-            // 線を描画を実行
-            ctx.stroke();
+            drawSource(X, Y, r, C.source);
             ///////////////////////////////////////////////////////////////////////光源/////////////////////////////////////////////////////////////////
 
 
@@ -192,7 +175,7 @@
             //色を指定する
             ctx.fillStyle = "black"; //塗りつぶしの色は黒  
             //左から,上から,の位置に、幅,高さ,の四角形を描く
-            ctx.fillRect(w - (w / 30), 0, w / 30, h);
+            ctx.fillRect(w - (w / 80), 0, w / 80, h);
             // 線を描画を実行
             ctx.stroke();
             //////////////////////////////////////////////////////////////スクリーン/////////////////////////////////////////////////////////////
@@ -212,31 +195,21 @@
 
 
             /////////////////////////////////////////////////////////////焦点/////////////////////////////////////////////////////////////
-            // パスをリセット
-            ctx.beginPath();
-            //色を指定する
-            ctx.fillStyle = "black"; //塗りつぶしの色は黒  
-            //左から,上から,の位置に、幅,高さ,の四角形を描く
-            blocksize = 10;
-            ctx.fillRect(slitx + f - (blocksize / 2), (h / 2) - blocksize / 2, blocksize, blocksize); //f
-            ctx.fillRect(slitx - f - (blocksize / 2), (h / 2) - blocksize / 2, blocksize, blocksize); //f
-            ctx.fillRect(slitx + 2 * f - (blocksize / 2), (h / 2) - blocksize / 2, blocksize, blocksize); //2f
-            ctx.fillRect(slitx - 2 * f - (blocksize / 2), (h / 2) - blocksize / 2, blocksize, blocksize); //2f
-            // 線を描画を実行
-            ctx.stroke();
+            var fmSz = Math.max(6, h / 50);
+            drawFocusMarker(slitx + f,     h / 2, fmSz);
+            drawFocusMarker(slitx - f,     h / 2, fmSz);
+            drawFocusMarker(slitx + 2 * f, h / 2, fmSz);
+            drawFocusMarker(slitx - 2 * f, h / 2, fmSz);
             /////////////////////////////////////////////////////////////焦点終わり///////////////////////////////////////////////////////////// 
 
             ////////////////////////////////////////////光軸
-            ctx.beginPath();     // 1.Pathで描画を開始する
-            ctx.moveTo(0, h / 2); // 2.描画する位置を指定する
-            ctx.lineTo(w, h / 2);
-            ctx.strokeStyle = "black";
-            ctx.lineWidth = 2;
-            ctx.stroke();
+            drawAxisWithArrows(2);
             ////////////光軸終わり
 
             /////////////眼をかく////////////////////////////////
             lensw = 40 * (1 - shou.value / 100);
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 3;
             ctx.beginPath();
             //パスの開始座標を指定する
             ctx.moveTo(slitx, (h / 2) - (slithole / 2));
