@@ -112,8 +112,8 @@
             ctx.beginPath();     // 1.Pathで描画を開始する
             ctx.moveTo(X, Y); // 2.描画する位置を指定する
             ctx.lineTo(X2, Y2);
-            ctx.strokeStyle = "red";
-            ctx.lineWidth = 3;
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 1.5;
             ctx.stroke();
 
             //放射状に引く
@@ -137,8 +137,8 @@
                 ctx.beginPath();     // 1.Pathで描画を開始する
                 ctx.moveTo(X, Y); // 2.描画する位置を指定する
                 ctx.lineTo(X2, Y2);
-                ctx.strokeStyle = "red";
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 1.5;
                 ctx.stroke();        // 4.Canvas上に描画する
                 var L = Math.sqrt(h * h + w * w);
 
@@ -151,11 +151,11 @@
                         }
                     } else if (X >= slitx - f) {//光源が焦点とレンズの間にあるとき
                         if (Y + takasa < h / 2 + slithole / 2 && Y + takasa > h / 2 - slithole / 2) {//レンズより内側なら屈折
-                            linemaker(X2, Y2, zouX, zouY, 0, "red");
+                            linemaker(X2, Y2, zouX, zouY, 0, "black");
                         }
                     } else {//光源が焦点より左にあるとき
                         if (Y + takasa < h / 2 + slithole / 2 && Y + takasa > h / 2 - slithole / 2) {//光線のうち、レンズの内側にある光線については、屈折させる。
-                            linemaker(X2, Y2, zouX, zouY, 0, "red");
+                            linemaker(X2, Y2, zouX, zouY, 0, "black");
                             var L = Math.sqrt(h * h + w * w);
                         }
 
@@ -166,24 +166,7 @@
 
 
             ///////////////////////////////////////////////////////////////////////光源/////////////////////////////////////////////////////////////////
-            // パスをリセット
-            ctx.beginPath();
-            // 円の中心座標: XY
-            // 半径: r
-            // 開始角度: 0度 (0 * Math.PI / 180)
-            // 終了角度: 360度 (360 * Math.PI / 180)
-            // 方向: true=反時計回りの円、false=時計回りの円
-            ctx.arc(X, Y, r, 0 * Math.PI / 180, 360 * Math.PI / 180, false);
-            // 塗りつぶしの色
-            ctx.fillStyle = "red";
-            // 塗りつぶしを実行
-            ctx.fill();
-            // 線の色
-            ctx.strokeStyle = "black";
-            // 線の太さ
-            ctx.lineWidth = 3;
-            // 線を描画を実行
-            ctx.stroke();
+            drawSource(X, Y, r, 'red');
             ///////////////////////////////////////////////////////////////////////光源/////////////////////////////////////////////////////////////////
 
 
@@ -260,24 +243,7 @@
             ///////////////////////////////////////////////////////////////////////////////////
 
             ////////////////////////////////////////////方眼紙
-            for (let i = 1; i <= 16; i++) {
-                var tatesen = w / 16;
-                ctx.beginPath();     // 1.Pathで描画を開始する
-                ctx.moveTo(tatesen * i, 0); // 2.描画する位置を指定する
-                ctx.lineTo(tatesen * i, h);
-                ctx.strokeStyle = "black";
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
-            for (let i = 1; i <= 8; i++) {
-                var yokosen = h / 8
-                ctx.beginPath();     // 1.Pathで描画を開始する
-                ctx.moveTo(0, yokosen * i); // 2.描画する位置を指定する
-                ctx.lineTo(w, yokosen * i);
-                ctx.strokeStyle = "black";
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
+            drawGridDotted(16, 8);
             ////////////方眼紙終わり
 
         }

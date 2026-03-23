@@ -127,24 +127,7 @@
             /////////////////////////////////////////////結像公式から、像の位置を求める////////////////////////////////////
 
             ////////////////////////////////////////////方眼紙
-            for (let i = 1; i <= 16; i++) {
-                var tatesen = w / 16;
-                ctx.beginPath();     // 1.Pathで描画を開始する
-                ctx.moveTo(tatesen * i, 0); // 2.描画する位置を指定する
-                ctx.lineTo(tatesen * i, h);
-                ctx.strokeStyle = "black";
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
-            for (let i = 1; i <= 8; i++) {
-                var yokosen = h / 8
-                ctx.beginPath();     // 1.Pathで描画を開始する
-                ctx.moveTo(0, yokosen * i); // 2.描画する位置を指定する
-                ctx.lineTo(w, yokosen * i);
-                ctx.strokeStyle = "black";
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
+            drawGridDotted(16, 8);
             ////////////方眼紙終わり
 
 
@@ -163,8 +146,8 @@
             ctx.beginPath();     // 1.Pathで描画を開始する
             ctx.moveTo(X, Y); // 2.描画する位置を指定する
             ctx.lineTo(X2, Y2);
-            ctx.strokeStyle = "red";
-            ctx.lineWidth = 3;
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 1.5;
             ctx.stroke();
 
             //放射状に引く
@@ -188,8 +171,8 @@
                 ctx.beginPath();     // 1.Pathで描画を開始する
                 ctx.moveTo(X, Y); // 2.描画する位置を指定する
                 ctx.lineTo(X2, Y2);
-                ctx.strokeStyle = "red";
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 1.5;
                 ctx.stroke();        // 4.Canvas上に描画する
                 var L = Math.sqrt(h * h + w * w);
 
@@ -202,11 +185,11 @@
                         }
                     } else if (X >= slitx - f) {//光源が焦点とレンズの間にあるとき
                         if (Y + takasa < h / 2 + slithole / 2 && Y + takasa > h / 2 - slithole / 2) {//レンズより内側なら屈折
-                            linemaker(X2, Y2, zouX, zouY, w, "red");
+                            linemaker(X2, Y2, zouX, zouY, w, "black");
                         }
                     } else {//光源が焦点より左にあるとき
                         if (Y + takasa < h / 2 + slithole / 2 && Y + takasa > h / 2 - slithole / 2) {//光線のうち、レンズの内側にある光線については、屈折させる。
-                            linemaker(X2, Y2, zouX, zouY, w, "red");
+                            linemaker(X2, Y2, zouX, zouY, w, "black");
                             var L = Math.sqrt(h * h + w * w);
                         }
 
@@ -227,8 +210,8 @@
             ctx.beginPath();     // 1.Pathで描画を開始する
             ctx.moveTo(X222, Y222); // 2.描画する位置を指定する
             ctx.lineTo(X23, Y23);
-            ctx.strokeStyle = "green";
-            ctx.lineWidth = 3;
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 1.5;
             ctx.stroke();
 
             //放射状に引く
@@ -252,8 +235,8 @@
                 ctx.beginPath();     // 1.Pathで描画を開始する
                 ctx.moveTo(X222, Y222); // 2.描画する位置を指定する
                 ctx.lineTo(X23, Y23);
-                ctx.strokeStyle = "green";
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 1.5;
                 ctx.stroke();        // 4.Canvas上に描画する
                 var L = Math.sqrt(h * h + w * w);
 
@@ -266,11 +249,11 @@
                         }
                     } else if (X222 >= slitx - f) {//光源が焦点とレンズの間にあるとき
                         if (Y222 + takasa222 < h / 2 + slithole / 2 && Y222 + takasa222 > h / 2 - slithole / 2) {//レンズより内側なら屈折
-                            linemaker(X23, Y23, zouX222, zouY222, w, "green");
+                            linemaker(X23, Y23, zouX222, zouY222, w, "black");
                         }
                     } else {//光源が焦点より左にあるとき
                         if (Y222 + takasa222 < h / 2 + slithole / 2 && Y222 + takasa222 > h / 2 - slithole / 2) {//光線のうち、レンズの内側にある光線については、屈折させる。
-                            linemaker(X23, Y23, zouX222, zouY222, w, "green");
+                            linemaker(X23, Y23, zouX222, zouY222, w, "black");
                             var L = Math.sqrt(h * h + w * w);
                         }
                     }

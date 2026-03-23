@@ -1,37 +1,122 @@
 /* 幾何光学シミュレーション 共通スタイル
-   brush_app ブランチ - パフォーマンス改善 + 印刷用ハイコントラストモード対応
-*/
+   brush_app ブランチ */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 
 body {
-    font-family: sans-serif;
-    margin: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP",
+                 "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    font-size: 14px;
+    color: #1a1a2e;
+    margin: 0;
+    padding: 8px 12px;
+    background: #f5f5f5;
+    line-height: 1.6;
+}
+
+h2 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+    color: #222;
+    letter-spacing: 0.01em;
 }
 
 canvas {
     display: block;
     margin-top: 4px;
     cursor: crosshair;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
 }
 
-/* 印刷用（白背景）ボタン */
-.hc-btn {
-    margin: 4px 0 4px 0;
-    padding: 4px 14px;
+/* ── コントロール行 ── */
+.controls, body > p, body > label, body > br ~ label {
     font-size: 13px;
+    color: #444;
+}
+
+input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: #c8d0e0;
+    outline: none;
     cursor: pointer;
-    border: 1px solid #888;
-    border-radius: 4px;
-    background: #f0f0f0;
+    vertical-align: middle;
+    margin: 0 4px;
+    width: 120px;
+}
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #3b6bda;
+    cursor: pointer;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 3px #3b6bda44;
+    transition: background 0.15s;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+    background: #2550b8;
+}
+
+output {
+    display: inline-block;
+    min-width: 26px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: #333;
+    font-size: 13px;
+}
+
+input[type="checkbox"] {
+    accent-color: #3b6bda;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+/* ── 印刷用（白背景）ボタン ── */
+.hc-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 5px 0;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    border: 1px solid #bfc7d4;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #444;
     user-select: none;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.hc-btn::before {
+    content: "🖨";
+    font-size: 13px;
 }
 
 .hc-btn:hover {
-    background: #e0e0e0;
+    background: #f0f4ff;
+    border-color: #8aabf5;
+    box-shadow: 0 2px 6px rgba(59,107,218,0.12);
 }
 
 .hc-btn.hc-active {
-    background: #dbeafe;
-    border-color: #1d4ed8;
-    color: #1d4ed8;
-    font-weight: bold;
+    background: #ebf0ff;
+    border-color: #3b6bda;
+    color: #1d3ea8;
+    font-weight: 600;
+    box-shadow: 0 0 0 2px #3b6bda33;
+}
+
+.hc-btn.hc-active::before {
+    content: "✓";
 }

@@ -122,8 +122,8 @@
                 ctx.beginPath();     // 1.Pathで描画を開始する
                 ctx.moveTo(X, Y); // 2.描画する位置を指定する
                 ctx.lineTo(X2, Y2);
-                ctx.strokeStyle = "red";
-                ctx.lineWidth = 3;
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 1.5;
                 ctx.stroke();
             }
 
@@ -149,8 +149,8 @@
                     ctx.beginPath();     // 1.Pathで描画を開始する
                     ctx.moveTo(X, Y); // 2.描画する位置を指定する
                     ctx.lineTo(X2, Y2);
-                    ctx.strokeStyle = "red";
-                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = "black";
+                    ctx.lineWidth = 1.5;
                     ctx.stroke();
                 }        // 4.Canvas上に描画する
                 var L = Math.sqrt(h * h + w * w);
@@ -160,25 +160,14 @@
                 if (Y + takasa < h / 2 + slithole / 2 && Y + takasa > h / 2 - slithole / 2) {//鏡に当たった光は反射。
                     var endy = endyget(X, Y, X2, Y2, w);
                     if (kekkastate === 1) {
-                        linemaker(X2, Y2, slitx - (w - slitx), endy, 0, "red");
+                        linemaker(X2, Y2, slitx - (w - slitx), endy, 0, "black");
                     }
                     var L = Math.sqrt(h * h + w * w);
                     if (sakuzustate == 1) {
                         var endyy = endyget(0, endy, X2, Y2, slitx + slitx - X);
                         linemaker(X2, Y2, slitx + slitx - X, endyy, slitx + slitx - X, "blue");
                         // 像の光源も書いておく
-                        ctx.beginPath();
-                        ctx.arc(slitx + slitx - X, endyy, r, 0 * Math.PI / 180, 360 * Math.PI / 180, false);
-                        // 塗りつぶしの色
-                        ctx.fillStyle = C.source;
-                        // 塗りつぶしを実行
-                        ctx.fill();
-                        // 線の色
-                        ctx.strokeStyle = "black";
-                        // 線の太さ
-                        ctx.lineWidth = 3;
-                        // 線を描画を実行
-                        ctx.stroke();
+                        drawSource(slitx + slitx - X, endyy, r, C.source);
                     }
                 }
 
@@ -189,24 +178,7 @@
 
             ///////////////////////////////////////////////////////////////////////光源/////////////////////////////////////////////////////////////////
             if (kagamistate === 0) {
-                // パスをリセット
-                ctx.beginPath();
-                // 円の中心座標: XY
-                // 半径: r
-                // 開始角度: 0度 (0 * Math.PI / 180)
-                // 終了角度: 360度 (360 * Math.PI / 180)
-                // 方向: true=反時計回りの円、false=時計回りの円
-                ctx.arc(X, Y, r, 0 * Math.PI / 180, 360 * Math.PI / 180, false);
-                // 塗りつぶしの色
-                ctx.fillStyle = "red";
-                // 塗りつぶしを実行
-                ctx.fill();
-                // 線の色
-                ctx.strokeStyle = "black";
-                // 線の太さ
-                ctx.lineWidth = 3;
-                // 線を描画を実行
-                ctx.stroke();
+                drawSource(X, Y, r, 'red');
             }
             ///////////////////////////////////////////////////////////////////////光源/////////////////////////////////////////////////////////////////
 
@@ -267,24 +239,7 @@
             /////////////鏡をかく////////////////////////////////
 
             ////////////////////////////////////////////方眼紙
-            for (let i = 1; i <= 16; i++) {
-                var tatesen = w / 16;
-                ctx.beginPath();     // 1.Pathで描画を開始する
-                ctx.moveTo(tatesen * i, 0); // 2.描画する位置を指定する
-                ctx.lineTo(tatesen * i, h);
-                ctx.strokeStyle = "black";
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
-            for (let i = 1; i <= 8; i++) {
-                var yokosen = h / 8
-                ctx.beginPath();     // 1.Pathで描画を開始する
-                ctx.moveTo(0, yokosen * i); // 2.描画する位置を指定する
-                ctx.lineTo(w, yokosen * i);
-                ctx.strokeStyle = "black";
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
+            drawGridDotted(16, 8);
             ////////////方眼紙終わり
 
         }
