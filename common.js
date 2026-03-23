@@ -164,6 +164,91 @@ function drawGridDotted(nx, ny) {
     ctx.restore();
 }
 
+// ----- 焦点マーカーの描画（教科書スタイル：十字＋中心ドット）-----
+/**
+ * 焦点位置に十字マーカーを描画する
+ * @param {number} x  中心X
+ * @param {number} y  中心Y
+ * @param {number} sz マーカーの半径（省略時 8）
+ */
+function drawFocusMarker(x, y, sz) {
+    sz = sz || 8;
+    ctx.save();
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth   = 1.5;
+    ctx.lineCap     = 'round';
+    ctx.beginPath(); ctx.moveTo(x - sz, y); ctx.lineTo(x + sz, y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, y - sz); ctx.lineTo(x, y + sz); ctx.stroke();
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(2, sz * 0.28), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+}
+
+// ----- 光軸（両端矢印付き）の描画 -----
+/**
+ * 光軸を両端矢印付きで描画する（教科書スタイル）
+ * グローバル変数 w, h を使用
+ * @param {number} [lw=1.5]    光軸の線幅
+ */
+function drawAxisWithArrows(lw) {
+    lw = lw || 1.5;
+    var ay = h / 2;
+    var aw = Math.max(8, h / 38);
+    ctx.save();
+    ctx.strokeStyle = 'black';
+    ctx.fillStyle   = 'black';
+    ctx.lineWidth   = lw;
+    ctx.beginPath();
+    ctx.moveTo(aw * 1.6, ay);
+    ctx.lineTo(w - aw * 1.6, ay);
+    ctx.stroke();
+    // 左向き矢印
+    ctx.beginPath();
+    ctx.moveTo(0, ay);
+    ctx.lineTo(aw * 1.5, ay - aw * 0.5);
+    ctx.lineTo(aw * 1.5, ay + aw * 0.5);
+    ctx.closePath();
+    ctx.fill();
+    // 右向き矢印
+    ctx.beginPath();
+    ctx.moveTo(w, ay);
+    ctx.lineTo(w - aw * 1.5, ay - aw * 0.5);
+    ctx.lineTo(w - aw * 1.5, ay + aw * 0.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+}
+
+// ----- 凸レンズ端の矢印（教科書スタイル）-----
+/**
+ * 凸レンズの上端・下端に矢印を描画する（教科書の表記規則）
+ * @param {number} x      レンズのX座標
+ * @param {number} top    上端のY座標
+ * @param {number} bottom 下端のY座標
+ */
+function drawLensEndArrows(x, top, bottom) {
+    var aw = Math.max(8, h / 38);
+    ctx.save();
+    ctx.fillStyle = 'black';
+    // 上向き矢印
+    ctx.beginPath();
+    ctx.moveTo(x, top);
+    ctx.lineTo(x - aw * 0.5, top + aw * 1.5);
+    ctx.lineTo(x + aw * 0.5, top + aw * 1.5);
+    ctx.closePath();
+    ctx.fill();
+    // 下向き矢印
+    ctx.beginPath();
+    ctx.moveTo(x, bottom);
+    ctx.lineTo(x - aw * 0.5, bottom - aw * 1.5);
+    ctx.lineTo(x + aw * 0.5, bottom - aw * 1.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+}
+
 // ----- 共通描画ユーティリティ -----
 /**
  * 始点 (x1,y1) と途中点 (x2,y2) を通る直線を x=end まで描画する。

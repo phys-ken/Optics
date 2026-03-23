@@ -20,7 +20,7 @@
     　　　<br><input type="checkbox" name="sakuzu" id="sakuzu" value="sakuzu">作図用の線を描画する
     　　　<br><input type="checkbox" name="kosen" id="kosen" value="kosen">全光線を描画する
     　　　<br><input type="checkbox" name="kekka" id="kekka" value="kekka">作図結果の表示
-    <canvas id="cv" style="background-color:rgb(221, 221, 221);">
+    <canvas id="cv" style="background-color:#FFFFFF;">
         図形を表示するには、canvasタグをサポートしたブラウザが必要です。
     </canvas>
 
@@ -297,46 +297,31 @@
             /////////////////////////////////////////////////////////////物体/////////////////////////////////////////////////////////////
 
 
-            /////////////////////////////////////////////////////////////焦点/////////////////////////////////////////////////////////////
-            // パスをリセット
-            ctx.beginPath();
-            //色を指定する
-            ctx.fillStyle = "black"; //塗りつぶしの色は黒  
-            //左から,上から,の位置に、幅,高さ,の四角形を描く
-            blocksize = 10;
-            ctx.fillRect(slitx + f - (blocksize / 2), (h / 2) - blocksize / 2, blocksize, blocksize); //f
-            ctx.fillRect(slitx - f - (blocksize / 2), (h / 2) - blocksize / 2, blocksize, blocksize); //f
-            ctx.fillRect(slitx + 2 * f - (blocksize / 2), (h / 2) - blocksize / 2, blocksize, blocksize); //2f
-            ctx.fillRect(slitx - 2 * f - (blocksize / 2), (h / 2) - blocksize / 2, blocksize, blocksize); //2f
-            // 線を描画を実行
-            ctx.stroke();
-            /////////////////////////////////////////////////////////////焦点終わり///////////////////////////////////////////////////////////// 
+            /////////////////////////////////////////////////////////////焦点（教科書スタイル：十字マーカー）/////////////////////////////////////////////////////////////
+            var fmSz = Math.max(6, h / 50);
+            drawFocusMarker(slitx + f,     h / 2, fmSz); //f（右）
+            drawFocusMarker(slitx - f,     h / 2, fmSz); //f（左）
+            drawFocusMarker(slitx + 2 * f, h / 2, fmSz); //2f（右）
+            drawFocusMarker(slitx - 2 * f, h / 2, fmSz); //2f（左）
+            /////////////////////////////////////////////////////////////焦点終わり/////////////////////////////////////////////////////////////
 
-            ////////////////////////////////////////////光軸
-            ctx.beginPath();     // 1.Pathで描画を開始する
-            ctx.moveTo(0, h / 2); // 2.描画する位置を指定する
-            ctx.lineTo(w, h / 2);
-            ctx.strokeStyle = "black";
-            ctx.lineWidth = 3;
-            ctx.stroke();
+            ////////////////////////////////////////////光軸（両端矢印付き）
+            drawAxisWithArrows(2);
             ////////////光軸終わり
 
             /////////////レンズをかく////////////////////////////////
             lensw = 40;
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            //パスの開始座標を指定する
             ctx.moveTo(slitx, (h / 2) - (slithole / 2));
-            //座標を指定してラインを引いていく quadraticCurveTo(cpx, cpy, x, y)
             ctx.quadraticCurveTo(slitx - lensw, h / 2, slitx, (h / 2) + (slithole / 2));
-            //現在のパスを輪郭表示する
             ctx.stroke();
             ctx.beginPath();
-            //パスの開始座標を指定する
             ctx.moveTo(slitx, (h / 2) - (slithole / 2));
-            //座標を指定してラインを引いていく quadraticCurveTo(cpx, cpy, x, y)
             ctx.quadraticCurveTo(slitx + lensw, h / 2, slitx, (h / 2) + (slithole / 2));
-            //現在のパスを輪郭表示する
             ctx.stroke();
+            drawLensEndArrows(slitx, (h / 2) - (slithole / 2), (h / 2) + (slithole / 2));
             /////////////レンズをかく////////////////////////////////
 
             ///////////////////////////////////sakuzustate==1のとき作図用の光線を引く///////////////////////////////////
