@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>光線の考え方　光源２つスリット１つ</title>
+    <link rel="stylesheet" href="common.css">
+    <script src="common.js"></script>
 </head>
 
 <body onLoad="loopd()">
@@ -44,7 +46,15 @@
         var state;
 
         function loopd() {
-            setInterval(draw, 10);
+            cvs.addEventListener("mousemove", function(e) {
+                var rect = e.target.getBoundingClientRect();
+                if (e.clientX - rect.left <= slitx) {
+                    Xa = e.clientX - rect.left;
+                    Ya = e.clientY - rect.top;
+                }
+            });
+            function loop() { draw(); requestAnimationFrame(loop); }
+            requestAnimationFrame(loop);
         }
 
 
@@ -52,31 +62,12 @@
         function draw() {
             var ho = document.getElementById('output1');
             var honsu = ho.value;
-            //クリック時のイベントを追加
-            cvs.addEventListener('click', function (e) {
-                if (state == 0) {
-                    state = 1;;
-                } else {
-                    state = 0;
-                }
-            });
             var flag2 = document.getElementById("kosen").checked;
             if (flag2 == false) {
                 state = 1;;
             } else {
                 state = 0;
             }
-
-
-            cvs.addEventListener("mousemove", (e) => {
-                var rect = e.target.getBoundingClientRect()
-                if (e.clientX - rect.left <= slitx) { //光源がスリットより右にいかないように制御
-                    Xa = e.clientX - rect.left
-                    Ya = e.clientY - rect.top
-                }
-                console.log(`${x}:${y}`)
-            });
-
 
             ctx.clearRect(0, 0, w, h);
             ///////////////////////////////////////////////////////////////////////放射状に線を引くa red/////////////////////////////////////////////////////////////////

@@ -1,0 +1,37 @@
+/* 幾何光学シミュレーション 共通スタイル
+   brush_app ブランチ - パフォーマンス改善 + 印刷用ハイコントラストモード対応
+*/
+
+body {
+    font-family: sans-serif;
+    margin: 8px;
+}
+
+canvas {
+    display: block;
+    margin-top: 4px;
+    cursor: crosshair;
+}
+
+/* 印刷用（白背景）ボタン */
+.hc-btn {
+    margin: 4px 0 4px 0;
+    padding: 4px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    border: 1px solid #888;
+    border-radius: 4px;
+    background: #f0f0f0;
+    user-select: none;
+}
+
+.hc-btn:hover {
+    background: #e0e0e0;
+}
+
+.hc-btn.hc-active {
+    background: #dbeafe;
+    border-color: #1d4ed8;
+    color: #1d4ed8;
+    font-weight: bold;
+}

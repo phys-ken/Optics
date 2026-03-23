@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>レンズのはたらき</title>
+    <link rel="stylesheet" href="common.css">
+    <script src="common.js"></script>
 </head>
 
 <body onLoad="loopd()">
@@ -55,7 +57,17 @@
 
 
         function loopd() {
-            setInterval(draw, 10);
+            cvs.addEventListener("mousemove", function(e) {
+                var rect = e.target.getBoundingClientRect();
+                if (e.clientX - rect.left <= slitx) {
+                    if (e.clientX - rect.left != slitx - f) {
+                        X = e.clientX - rect.left;
+                        Y = e.clientY - rect.top;
+                    }
+                }
+            });
+            function loop() { draw(); requestAnimationFrame(loop); }
+            requestAnimationFrame(loop);
         }
 
         function draw() {
@@ -81,18 +93,6 @@
 
             var ho = document.getElementById('output1');
             var honsu = ho.value;
-
-
-            //マウスの動きを取得
-            cvs.addEventListener("mousemove", (e) => {
-                var rect = e.target.getBoundingClientRect()
-                if (e.clientX - rect.left <= slitx) { //光源がスリットより右にいかないように制御
-                    if (e.clientX - rect.left == slitx - f) { } else {//光源が焦点に来ないように制御
-                        X = e.clientX - rect.left;
-                        Y = e.clientY - rect.top;
-                    }
-                }
-            });
             X222 = X;
             Y222 = Y + (3 / 8) * h;
 
@@ -371,23 +371,6 @@
 
         }
 
-
-        //始点と途中点の座標を指定することで、直線を引く。endは、終点のx座標
-        function linemaker(x1, y1, x2, y2, end, col) {
-            var y3 = ((y2 - y1) * (end - x1) / (x2 - x1)) + y1;
-            ctx.beginPath();     // 1.Pathで描画を開始する
-            ctx.moveTo(x1, y1); // 2.描画する位置を指定する
-            ctx.lineTo(end, y3);
-            ctx.strokeStyle = col;
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-
-        //始点と途中点の座標を指定することで、線分の終点の座標を取得する。
-        function endyget(x1, y1, x2, y2, end) {
-            var y3 = ((y2 - y1) * (end - x1) / (x2 - x1)) + y1;
-            return y3;
-        }
 
     </script>
 
