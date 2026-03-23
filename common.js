@@ -143,7 +143,7 @@ function drawGridDotted(nx, ny) {
     ny = ny || 8;
     ctx.save();
     ctx.setLineDash([2, 7]);
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.22)';
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.55)';
     ctx.lineWidth   = 0.8;
     ctx.lineCap     = 'butt';
     var i;
