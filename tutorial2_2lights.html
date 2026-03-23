@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>光線の考え方　光源２つスリット１つ</title>
+    <link rel="stylesheet" href="common.css">
+    <script src="common.js"></script>
 </head>
 
 <body onLoad="loopd()">
@@ -43,7 +45,18 @@
         var state;
 
         function loopd() {
-            setInterval(draw, 10);
+            cvs.addEventListener('click', function(e) {
+                if (state == 0) { state = 1; } else { state = 0; }
+            });
+            cvs.addEventListener("mousemove", function(e) {
+                var rect = e.target.getBoundingClientRect();
+                if (e.clientX - rect.left <= slitx) {
+                    Xa = e.clientX - rect.left;
+                    Ya = e.clientY - rect.top;
+                }
+            });
+            function loop() { draw(); requestAnimationFrame(loop); }
+            requestAnimationFrame(loop);
         }
 
 
@@ -51,25 +64,6 @@
         function draw() {
             var ho = document.getElementById('output1');
             var honsu = ho.value;
-            //クリック時のイベントを追加
-            cvs.addEventListener('click', function (e) {
-                if (state == 0) {
-                    state = 1;;
-                } else {
-                    state = 0;
-                }
-            });
-
-
-            cvs.addEventListener("mousemove", (e) => {
-                var rect = e.target.getBoundingClientRect()
-                if (e.clientX - rect.left <= slitx) { //光源がスリットより右にいかないように制御
-                    Xa = e.clientX - rect.left
-                    Ya = e.clientY - rect.top
-                }
-                console.log(`${x}:${y}`)
-            });
-
 
             ctx.clearRect(0, 0, w, h);
             ///////////////////////////////////////////////////////////////////////放射状に線を引くa red/////////////////////////////////////////////////////////////////
@@ -120,24 +114,7 @@
             ///////////////////////////////////////////////////////////////////////放射状に線を引いた/////////////////////////////////////////////////////////////////
 
             ///////////////////////////////////////////////////////////////////////光源a red/////////////////////////////////////////////////////////////////
-            // パスをリセット
-            ctx.beginPath();
-            // 円の中心座標: (100,100)
-            // 半径: 50
-            // 開始角度: 0度 (0 * Math.PI / 180)
-            // 終了角度: 360度 (360 * Math.PI / 180)
-            // 方向: true=反時計回りの円、false=時計回りの円
-            ctx.arc(Xa, Ya, r, 0 * Math.PI / 180, 360 * Math.PI / 180, false);
-            // 塗りつぶしの色
-            ctx.fillStyle = "red";
-            // 塗りつぶしを実行
-            ctx.fill();
-            // 線の色
-            ctx.strokeStyle = "black";
-            // 線の太さ
-            ctx.lineWidth = 3;
-            // 線を描画を実行
-            ctx.stroke();
+            drawSource(Xa, Ya, r, C.rayA);
             ///////////////////////////////////////////////////////////////////////光源/////////////////////////////////////////////////////////////////
 
 
@@ -188,25 +165,8 @@
             }
             ///////////////////////////////////////////////////////////////////////放射状に線を引いた/////////////////////////////////////////////////////////////////
 
-            ///////////////////////////////////////////////////////////////////////光源/////////////////////////////////////////////////////////////////
-            // パスをリセット
-            ctx.beginPath();
-            // 円の中心座標: (100,100)
-            // 半径: 50
-            // 開始角度: 0度 (0 * Math.PI / 180)
-            // 終了角度: 360度 (360 * Math.PI / 180)
-            // 方向: true=反時計回りの円、false=時計回りの円
-            ctx.arc(Xb, Yb, r, 0 * Math.PI / 180, 360 * Math.PI / 180, false);
-            // 塗りつぶしの色
-            ctx.fillStyle = "green";
-            // 塗りつぶしを実行
-            ctx.fill();
-            // 線の色
-            ctx.strokeStyle = "black";
-            // 線の太さ
-            ctx.lineWidth = 3;
-            // 線を描画を実行
-            ctx.stroke();
+            ///////////////////////////////////////////////////////////////////////光源b green/////////////////////////////////////////////////////////////////
+            drawSource(Xb, Yb, r, C.rayB);
             ///////////////////////////////////////////////////////////////////////光源/////////////////////////////////////////////////////////////////
 
 
@@ -219,7 +179,7 @@
             //色を指定する
             ctx.fillStyle = "black"; //塗りつぶしの色は黒  
             //左から,上から,の位置に、幅,高さ,の四角形を描く
-            ctx.fillRect(w - (w / 30), 0, w / 30, h);
+            ctx.fillRect(w - (w / 80), 0, w / 80, h);
             // 線を描画を実行
             ctx.stroke();
             //////////////////////////////////////////////////////////////スクリーン/////////////////////////////////////////////////////////////

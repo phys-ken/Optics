@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>鏡のはたらき</title>
+    <link rel="stylesheet" href="common.css">
+    <script src="common.js"></script>
 </head>
 
 <body onLoad="loopd()">
@@ -20,7 +22,7 @@
     　　　<br><br><input type="checkbox" name="kekka" id="kekka" value="kekka">作図結果の表示　　　
     <br>下の図形上でクリックすると全光線を描画します<br>
 
-    <canvas id="cv" style="background-color:rgb(212, 212, 212);">
+    <canvas id="cv" style="background-color:#FFFFFF;">
         図形を表示するには、canvasタグをサポートしたブラウザが必要です。
     </canvas>
 
@@ -50,7 +52,18 @@
 
 
         function loopd() {
-            setInterval(draw, 10);
+            cvs.addEventListener('click', function(e) {
+                if (state == 0) { state = 1; } else { state = 0; }
+            });
+            cvs.addEventListener("mousemove", function(e) {
+                var rect = e.target.getBoundingClientRect();
+                if (e.clientX - rect.left <= slitx) {
+                    X = e.clientX - rect.left;
+                    Y = e.clientY - rect.top;
+                }
+            });
+            function loop() { draw(); requestAnimationFrame(loop); }
+            requestAnimationFrame(loop);
         }
 
 
@@ -78,29 +91,9 @@
 
             var ho = document.getElementById('output1');
             var honsu = ho.value;
-            //クリック時のイベントを追加
-            cvs.addEventListener('click', function (e) {
-                if (state == 0) {
-                    state = 1;;
-                } else {
-                    state = 0;
-                }
-            });
-
-            //マウスの動きを取得
-            cvs.addEventListener("mousemove", (e) => {
-                var rect = e.target.getBoundingClientRect()
-                if (e.clientX - rect.left <= slitx) { //光源がスリットより右にいかないように制御
-                    if (e.clientX - rect.left == slitx - f) { } else {//光源が焦点に来ないように制御
-                        X = e.clientX - rect.left;
-                        Y = e.clientY - rect.top;
-                    }
-                }
-            });
 
             ctx.clearRect(0, 0, w, h); //canvasの初期化
-
-
+            drawGridDotted(16, 8); // グリッドを最初に描画（背景として）
 
             /////////////////////////////////////////////結像公式から、像の位置を求める////////////////////////////////////
             var zouX;
@@ -128,8 +121,8 @@
                 ctx.beginPath();     // 1.Pathで描画を開始する
                 ctx.moveTo(X, Y); // 2.描画する位置を指定する
                 ctx.lineTo(X2, Y2);
-                ctx.strokeStyle = "red";
-                ctx.lineWidth = 3;
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 1.5;
                 ctx.stroke();
             }
 
@@ -155,8 +148,8 @@
                     ctx.beginPath();     // 1.Pathで描画を開始する
                     ctx.moveTo(X, Y); // 2.描画する位置を指定する
                     ctx.lineTo(X2, Y2);
-                    ctx.strokeStyle = "red";
-                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = "black";
+                    ctx.lineWidth = 1.5;
                     ctx.stroke();
                 }        // 4.Canvas上に描画する
                 var L = Math.sqrt(h * h + w * w);
@@ -166,25 +159,14 @@
                 if (Y + takasa < h / 2 + slithole / 2 && Y + takasa > h / 2 - slithole / 2) {//鏡に当たった光は反射。
                     var endy = endyget(X, Y, X2, Y2, w);
                     if (kekkastate === 1) {
-                        linemaker(X2, Y2, slitx - (w - slitx), endy, 0, "red");
+                        linemaker(X2, Y2, slitx - (w - slitx), endy, 0, "black");
                     }
                     var L = Math.sqrt(h * h + w * w);
                     if (sakuzustate == 1) {
                         var endyy = endyget(0, endy, X2, Y2, slitx + slitx - X);
                         linemaker(X2, Y2, slitx + slitx - X, endyy, slitx + slitx - X, "blue");
                         // 像の光源も書いておく
-                        ctx.beginPath();
-                        ctx.arc(slitx + slitx - X, endyy, r, 0 * Math.PI / 180, 360 * Math.PI / 180, false);
-                        // 塗りつぶしの色
-                        ctx.fillStyle = "yellow";
-                        // 塗りつぶしを実行
-                        ctx.fill();
-                        // 線の色
-                        ctx.strokeStyle = "black";
-                        // 線の太さ
-                        ctx.lineWidth = 3;
-                        // 線を描画を実行
-                        ctx.stroke();
+                        drawSource(slitx + slitx - X, endyy, r, C.source);
                     }
                 }
 
@@ -195,24 +177,7 @@
 
             ///////////////////////////////////////////////////////////////////////光源/////////////////////////////////////////////////////////////////
             if (kagamistate === 0) {
-                // パスをリセット
-                ctx.beginPath();
-                // 円の中心座標: XY
-                // 半径: r
-                // 開始角度: 0度 (0 * Math.PI / 180)
-                // 終了角度: 360度 (360 * Math.PI / 180)
-                // 方向: true=反時計回りの円、false=時計回りの円
-                ctx.arc(X, Y, r, 0 * Math.PI / 180, 360 * Math.PI / 180, false);
-                // 塗りつぶしの色
-                ctx.fillStyle = "red";
-                // 塗りつぶしを実行
-                ctx.fill();
-                // 線の色
-                ctx.strokeStyle = "black";
-                // 線の太さ
-                ctx.lineWidth = 3;
-                // 線を描画を実行
-                ctx.stroke();
+                drawSource(X, Y, r, 'red');
             }
             ///////////////////////////////////////////////////////////////////////光源/////////////////////////////////////////////////////////////////
 
@@ -223,7 +188,7 @@
             //色を指定する
             ctx.fillStyle = "black"; //塗りつぶしの色は黒  
             //左から,上から,の位置に、幅,高さ,の四角形を描く
-            ctx.fillRect(w - (w / 30), 0, w / 30, h);
+            ctx.fillRect(w - (w / 80), 0, w / 80, h);
             // 線を描画を実行
             ctx.stroke();
             //////////////////////////////////////////////////////////////スクリーン/////////////////////////////////////////////////////////////
@@ -257,13 +222,8 @@
                         ctx.stroke(); */
             /////////////////////////////////////////////////////////////焦点終わり///////////////////////////////////////////////////////////// 
 
-            ////////////////////////////////////////////光軸
-            ctx.beginPath();     // 1.Pathで描画を開始する
-            ctx.moveTo(0, h / 2); // 2.描画する位置を指定する
-            ctx.lineTo(w, h / 2);
-            ctx.strokeStyle = "black";
-            ctx.lineWidth = 2;
-            ctx.stroke();
+            ////////////////////////////////////////////光軸（両端矢印付き）
+            drawAxisWithArrows(2);
             ////////////光軸終わり
 
             /////////////鏡をかく////////////////////////////////
@@ -272,46 +232,10 @@
             ctx.stroke();
             /////////////鏡をかく////////////////////////////////
 
-            ////////////////////////////////////////////方眼紙
-            for (let i = 1; i <= 16; i++) {
-                var tatesen = w / 16;
-                ctx.beginPath();     // 1.Pathで描画を開始する
-                ctx.moveTo(tatesen * i, 0); // 2.描画する位置を指定する
-                ctx.lineTo(tatesen * i, h);
-                ctx.strokeStyle = "black";
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
-            for (let i = 1; i <= 8; i++) {
-                var yokosen = h / 8
-                ctx.beginPath();     // 1.Pathで描画を開始する
-                ctx.moveTo(0, yokosen * i); // 2.描画する位置を指定する
-                ctx.lineTo(w, yokosen * i);
-                ctx.strokeStyle = "black";
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
-            ////////////方眼紙終わり
+            // グリッドは draw() 冒頭で描画済み
 
         }
 
-
-        //始点と途中点の座標を指定することで、直線を引く。endは、終点のx座標
-        function linemaker(x1, y1, x2, y2, end, col) {
-            var y3 = ((y2 - y1) * (end - x1) / (x2 - x1)) + y1;
-            ctx.beginPath();     // 1.Pathで描画を開始する
-            ctx.moveTo(x1, y1); // 2.描画する位置を指定する
-            ctx.lineTo(end, y3);
-            ctx.strokeStyle = col;
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-
-        //始点と途中点の座標を指定することで、線分の終点の座標を取得する。
-        function endyget(x1, y1, x2, y2, end) {
-            var y3 = ((y2 - y1) * (end - x1) / (x2 - x1)) + y1;
-            return y3;
-        }
 
     </script>
 
